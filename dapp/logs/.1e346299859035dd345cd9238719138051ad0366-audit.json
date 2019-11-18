@@ -1,0 +1,19 @@
+{
+    "keep": {
+        "days": false,
+        "amount": 5
+    },
+    "auditLog": "logs/.1e346299859035dd345cd9238719138051ad0366-audit.json",
+    "files": [
+        {
+            "date": 1573997652564,
+            "name": "logs/pprovider2-oracle-dapp-service-node-2019-11-17.log",
+            "hash": "1be5f738c58c51e4015eb0bfdb23353c"
+        },
+        {
+            "date": 1574074228739,
+            "name": "logs/pprovider2-oracle-dapp-service-node-2019-11-18.log",
+            "hash": "ca54183a21f6555db6c20697ca2b1626"
+        }
+    ]
+}

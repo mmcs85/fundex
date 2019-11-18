@@ -1,0 +1,19 @@
+{
+    "keep": {
+        "days": false,
+        "amount": 5
+    },
+    "auditLog": "logs/.f11087a8e4e43a4a8efd45b096f797e8b2fda683-audit.json",
+    "files": [
+        {
+            "date": 1573997620234,
+            "name": "logs/pprovider1-history-dapp-service-node-2019-11-17.log",
+            "hash": "d8ac7e439bc6c42860266c25b6f18d38"
+        },
+        {
+            "date": 1574074199174,
+            "name": "logs/pprovider1-history-dapp-service-node-2019-11-18.log",
+            "hash": "db0f14fcab613745489c6049b178a623"
+        }
+    ]
+}
