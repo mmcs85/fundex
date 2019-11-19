@@ -14,6 +14,11 @@
             "date": 1574074220057,
             "name": "logs/pprovider2-log-dapp-service-node-2019-11-18.log",
             "hash": "2f72e48989200fb7b1bc32ad8351a373"
+        },
+        {
+            "date": 1574196997657,
+            "name": "logs/pprovider2-log-dapp-service-node-2019-11-19.log",
+            "hash": "b8f9c10f24ebaaa5e3d14b5b3c559f06"
         }
     ]
 }
