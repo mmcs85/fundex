@@ -54,7 +54,7 @@ CONTRACT_START()
       typedef eosio::multi_index< "accounts"_n, account > accounts;
       typedef eosio::multi_index< "stat"_n, etf_stats > stats;*/
 
-      [[eosio::action]] void create(const name& issuer, std::vector<extended_asset> basket_units, const asset&  maximum_supply) 
+      [[eosio::action]] void create(const name& issuer, std::vector<extended_asset> basket_units, const asset&  maximum_supply)
       {
         require_auth( issuer );
 
@@ -75,7 +75,7 @@ CONTRACT_START()
         });
      }
 
-     [[eosio::action]] void issue( const name& to, const asset& quantity, const string& memo )
+     [[eosio::action]] void issue( const name& account, const asset& quantity, const string& memo )
      {
         auto sym = quantity.symbol;
         check( sym.is_valid(), "invalid symbol name" );
@@ -86,7 +86,7 @@ CONTRACT_START()
         check( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
         const auto& st = *existing;
 
-        require_auth( to );
+        require_auth( account );
 
         check( quantity.is_valid(), "invalid quantity" );
         check( quantity.amount > 0, "must issue positive quantity" );
@@ -95,31 +95,31 @@ CONTRACT_START()
         check( quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply");
 
         deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(to.value);
+        auto deposit_itr = deposittable.find(account.value);
 
         check(deposit_itr != deposittable.end(), "A deposit must exist");
 
         auto deposit = *deposit_itr;
 
         for ( auto const& unit: st.basket_units ) {
-            const auto& unit_key = std::pair<uint64_t, uint64_t>(unit.contract.value, unit.quantity.symbol.code().raw());
-            const auto& deposit_asset_itr = deposit.assetmap.find(unit_key);
+            const auto& asset_key = std::pair<uint64_t, uint64_t>(unit.contract.value, unit.quantity.symbol.code().raw());
+            const auto& deposit_asset_itr = deposit_itr->assetmap.find(asset_key);
 
-            check(deposit_asset_itr != deposit.assetmap.end(), "required a deposit of the etf underlying asset");
+            check(deposit_asset_itr != deposit_itr->assetmap.end(), "required a deposit of the asset");
 
             auto& deposit_asset = deposit_asset_itr->second;
             auto asset_amount = deposit_asset.quantity.amount;
-            auto units_amount = unit.quantity.amount * quantity.amount;
+            auto amt_amount = unit.quantity.amount * quantity.amount;
 
-            check(asset_amount >= units_amount, "not enough funds for the etf underlying asset");
+            check(asset_amount >= amt_amount, "not enough funds for this asset");
 
-            if(asset_amount == units_amount) {
+            if(asset_amount == amt_amount) {
                 deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-                    deposit.assetmap.erase(deposit_asset_itr);
+                    d.assetmap.erase(deposit_asset_itr);
                 });
             } else {
                 deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-                    deposit.assetmap[unit_key].quantity.amount -= units_amount;
+                    d.assetmap[asset_key].quantity.amount -= amt_amount;
                 });
             }
         }
@@ -128,10 +128,10 @@ CONTRACT_START()
            s.supply += quantity;
         });
 
-        add_balance( to, quantity, to );
+        add_balance( account, quantity, account );
       }
 
-      [[eosio::action]] void redeem(const name& to, const asset& quantity, const string& memo )
+      [[eosio::action]] void redeem(const name& account, const asset& quantity, const string& memo )
       {
         auto sym = quantity.symbol;
         check( sym.is_valid(), "invalid symbol name" );
@@ -142,7 +142,7 @@ CONTRACT_START()
         check( existing != statstable.end(), "token with symbol does not exist" );
         const auto& st = *existing;
 
-        require_auth( to );
+        require_auth( account );
 
         check( quantity.is_valid(), "invalid quantity" );
         check( quantity.amount > 0, "must retire positive quantity" );
@@ -152,14 +152,14 @@ CONTRACT_START()
             s.supply -= quantity;
         });
 
-        sub_balance( to, quantity );
+        sub_balance( account, quantity );
 
         for ( auto const& unit: st.basket_units ) {
             auto units_amount = unit.quantity.amount * quantity.amount;
 
             eosio::action(permission_level(_self, name("active")),
                   unit.contract, name("transfer"),
-                  std::make_tuple(_self, to, units_amount, "withdraw asset action"))
+                  std::make_tuple(_self, account, units_amount, "withdraw asset action"))
             .send();
         }
       }
@@ -229,51 +229,30 @@ CONTRACT_START()
         }
       }
 
-/*
-      TABLE account {
-         extended_asset balance;
-         uint64_t primary_key()const { return balance.contract.value; }
-      };
+      [[eosio::action]] void withdraw(name account)
+      {
+        require_auth(account);
 
-      typedef dapp::multi_index<"vaccounts"_n, account> cold_accounts_t;
-      typedef eosio::multi_index<".vaccounts"_n, account> cold_accounts_t_v_abi;
-      TABLE shardbucket {
-          std::vector<char> shard_uri;
-          uint64_t shard;
-          uint64_t primary_key() const { return shard; }
-      };
-      typedef eosio::multi_index<"vaccounts"_n, shardbucket> cold_accounts_t_abi;
+        deposits deposittable(_self, _self.value);
+        auto deposit_itr = deposittable.find(account.value);
 
+        check(deposit_itr != deposittable.end(), "A deposit must exist");
 
-     [[eosio::action]] void withdraw( name to, name token_contract){
+        auto deposit = *deposit_itr;
 
-            require_auth( to );
-            require_recipient( to );
-            auto received = sub_all_cold_balance(to, token_contract);
-            action(permission_level{_self, "active"_n}, token_contract, "transfer"_n,
-               std::make_tuple(_self, to, received, std::string("withdraw")))
+        for ( auto const& asset: deposit.assetmap ) {
+
+            eosio::action(permission_level(_self, name("active")),
+                    asset.second.contract, name("transfer"),
+                    std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
             .send();
+        }
+
+        deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            d.assetmap.clear();
+        });
       }
 
-     void transfer( name from,
-                     name to,
-                     asset        quantity,
-                     string       memo ){
-        require_auth(from);
-        if(to != _self || from == _self || from == "eosio"_n || from == "eosio.stake"_n || from == to)
-            return;
-        if(memo == "seed transfer")
-            return;
-        if (memo.size() > 0){
-          name to_act = name(memo.c_str());
-          eosio::check(is_account(to_act), "The account name supplied is not valid");
-          require_recipient(to_act);
-          from = to_act;
-        }
-        extended_asset received(quantity, get_first_receiver());
-        add_cold_balance(from, received);
-     }
-*/
    private:
 
     void sub_balance( const name& owner, const asset& value ) {
@@ -302,4 +281,4 @@ CONTRACT_START()
         }
     }
 };
-EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(issue)(redeem)(transfer))
+EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(issue)(redeem)(transfer)(withdraw))
