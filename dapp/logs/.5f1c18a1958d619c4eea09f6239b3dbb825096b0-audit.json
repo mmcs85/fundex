@@ -19,6 +19,11 @@
             "date": 1574196990424,
             "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-19.log",
             "hash": "a7241878fb2d98988b08d1db82c071e8"
+        },
+        {
+            "date": 1574242594370,
+            "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-20.log",
+            "hash": "8a894d06ba64158f4e4c2e50f4e5252c"
         }
     ]
 }
