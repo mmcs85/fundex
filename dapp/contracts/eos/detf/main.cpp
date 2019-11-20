@@ -32,9 +32,27 @@ CONTRACT_START()
          uint64_t primary_key()const { return supply.symbol.code().raw(); }
       };
 
-      typedef eosio::multi_index< "deposits"_n, deposit > deposits;
+      TABLE shardbucket {
+          std::vector<char> shard_uri;
+          uint64_t shard;
+          uint64_t primary_key() const { return shard; }
+      };
+
+      typedef dapp::multi_index<"deposits"_n, deposit> deposits;
+      typedef eosio::multi_index<".deposits"_n, deposit> deposits_v_abi;
+      typedef eosio::multi_index<"deposits"_n, shardbucket> deposits_abi;
+
+      typedef dapp::multi_index<"accounts"_n, account> accounts;
+      typedef eosio::multi_index<".accounts"_n, account> accounts_v_abi;
+      typedef eosio::multi_index<"accounts"_n, shardbucket> accounts_abi;
+
+      typedef dapp::multi_index<"stat"_n, etf_stats> stats;
+      typedef eosio::multi_index<".stat"_n, etf_stats> stats_v_abi;
+      typedef eosio::multi_index<"stat"_n, shardbucket> stats_abi;
+
+      /*typedef eosio::multi_index< "deposits"_n, deposit > deposits;
       typedef eosio::multi_index< "accounts"_n, account > accounts;
-      typedef eosio::multi_index< "stat"_n, etf_stats > stats;
+      typedef eosio::multi_index< "stat"_n, etf_stats > stats;*/
 
       [[eosio::action]] void create(const name& issuer, std::vector<extended_asset> basket_units, const asset&  maximum_supply) 
       {
@@ -50,7 +68,7 @@ CONTRACT_START()
         check( existing == statstable.end(), "token with symbol already exists" );
 
         statstable.emplace(issuer, [&]( auto& s ) {
-            s.basket_units = basket_units;
+            s.basket_units  = basket_units;
             s.supply.symbol = maximum_supply.symbol;
             s.max_supply    = maximum_supply;
             s.issuer        = issuer;
@@ -87,13 +105,13 @@ CONTRACT_START()
             const auto& unit_key = std::pair<uint64_t, uint64_t>(unit.contract.value, unit.quantity.symbol.code().raw());
             const auto& deposit_asset_itr = deposit.assetmap.find(unit_key);
 
-            check(deposit_asset_itr != deposit.assetmap.end(), "required a deposit of the etf underlying assets");
+            check(deposit_asset_itr != deposit.assetmap.end(), "required a deposit of the etf underlying asset");
 
             auto& deposit_asset = deposit_asset_itr->second;
             auto asset_amount = deposit_asset.quantity.amount;
             auto units_amount = unit.quantity.amount * quantity.amount;
 
-            check(asset_amount >= units_amount, "not enough funds for required ");
+            check(asset_amount >= units_amount, "not enough funds for the etf underlying asset");
 
             if(asset_amount == units_amount) {
                 deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
@@ -113,7 +131,7 @@ CONTRACT_START()
         add_balance( to, quantity, to );
       }
 
-      [[eosio::action]] void redeem( const asset& quantity, const string& memo ) 
+      [[eosio::action]] void redeem(const name& to, const asset& quantity, const string& memo )
       {
         auto sym = quantity.symbol;
         check( sym.is_valid(), "invalid symbol name" );
@@ -124,17 +142,26 @@ CONTRACT_START()
         check( existing != statstable.end(), "token with symbol does not exist" );
         const auto& st = *existing;
 
-        require_auth( st.issuer );
+        require_auth( to );
+
         check( quantity.is_valid(), "invalid quantity" );
         check( quantity.amount > 0, "must retire positive quantity" );
-
         check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
 
         statstable.modify( st, same_payer, [&]( auto& s ) {
-        s.supply -= quantity;
+            s.supply -= quantity;
         });
 
-        sub_balance( st.issuer, quantity );
+        sub_balance( to, quantity );
+
+        for ( auto const& unit: st.basket_units ) {
+            auto units_amount = unit.quantity.amount * quantity.amount;
+
+            eosio::action(permission_level(_self, name("active")),
+                  unit.contract, name("transfer"),
+                  std::make_tuple(_self, to, units_amount, "withdraw asset action"))
+            .send();
+        }
       }
 
       [[eosio::action]] void transfer( const name&    from,
@@ -150,7 +177,7 @@ CONTRACT_START()
         // 1 - normal etf token transfers
         // 2 - deposits of tokens to issue etf token
 
-        if(get_first_receiver() == get_self()) {
+        if(_first_receiver == _self) {
             auto sym = quantity.symbol.code();
             stats statstable( get_self(), sym.raw() );
             const auto& st = statstable.get( sym.raw() );
@@ -168,10 +195,37 @@ CONTRACT_START()
             sub_balance( from, quantity );
             add_balance( to, quantity, payer );
         } else {
-            /*for(auto& unit : basket_units ) {
-                auto& unit_key = std::pair<uint64_t, uint64_t>(unit.contract.value, unit.quantity.symbol.code().raw());
-                s.basket_units[unit_key] = unit;
-            }*/
+            if (from == _self ||
+                to != _self ||
+                (_first_receiver == name("eosio.token") &&
+                (from == name("eosio.stake") ||
+                from == name("eosio.ram"))))
+            {
+                return;
+            }
+
+            deposits deposittable(_self, _self.value);
+            auto deposit_itr = deposittable.find(from.value);
+
+            const auto& unit_key = std::pair<uint64_t, uint64_t>(_first_receiver.value, quantity.symbol.code().raw());
+            auto new_deposit_asset = extended_asset(quantity, _first_receiver);
+
+            if(deposit_itr == deposittable.end()) {
+                deposittable.emplace(from, [&](auto &d) {
+                    d.account = from;
+                    d.assetmap[unit_key] = new_deposit_asset;
+                });
+            } else {
+                deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                    const auto& deposit_asset_itr = d.assetmap.find(unit_key);
+
+                    if(deposit_asset_itr == d.assetmap.end()) {
+                        d.assetmap[unit_key] = new_deposit_asset;
+                    } else {
+                        d.assetmap[unit_key] += new_deposit_asset;
+                    }
+                });
+            }
         }
       }
 
