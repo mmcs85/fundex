@@ -1,0 +1,30 @@
+{
+  "ignore": [
+    "README.md",
+    "zeus-box.json",
+    "zeus-config.js"
+  ],
+  "commands": {},
+  "hooks": {},
+  "dependencies": [
+    "dapp",
+    "templates-emptycontract-eos-cpp",
+    "hooks-npm",
+    "hooks-extensions",
+    "seed-extensions",
+    "seed",
+    "seed-zeus-support",
+    "seed-zeus-base",
+    "seed-empty",
+    "mocha",
+    "seed-tests",
+    "core-extensions",
+    "run-extensions",
+    "seed-models",
+    "migrations-extensions",
+    "localenv-extensions",
+    "seed-eos",
+    "eos-extensions",
+    "zeus-eos"
+  ]
+}
