@@ -154,6 +154,30 @@ CONTRACT_START()
         .send();
     }
 
+    [[eosio::action]] void withdraw(name account)
+    {
+        require_auth(account);
+
+        deposits deposittable(_self, _self.value);
+        auto deposit_itr = deposittable.find(account.value);
+
+        check(deposit_itr != deposittable.end(), "A deposit must exist");
+
+        auto deposit = *deposit_itr;
+
+        for ( auto const& asset: deposit.assetmap ) {
+
+            eosio::action(permission_level(_self, name("active")),
+                    asset.second.contract, name("transfer"),
+                    std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+            .send();
+        }
+
+        deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            d.assetmap.clear();
+        });
+    }
+
     void transfer( const name&    from,
                    const name&    to,
                    const asset&   quantity,
@@ -196,30 +220,6 @@ CONTRACT_START()
             });
         }
     }
-
-    [[eosio::action]] void withdraw(name account)
-      {
-        require_auth(account);
-
-        deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(account.value);
-
-        check(deposit_itr != deposittable.end(), "A deposit must exist");
-
-        auto deposit = *deposit_itr;
-
-        for ( auto const& asset: deposit.assetmap ) {
-
-            eosio::action(permission_level(_self, name("active")),
-                    asset.second.contract, name("transfer"),
-                    std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
-            .send();
-        }
-
-        deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-            d.assetmap.clear();
-        });
-      }
 
     //   TABLE stat {
     //       uint64_t   counter = 0;
@@ -372,4 +372,4 @@ CONTRACT_START()
 
     VACCOUNTS_APPLY()
 };
-EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(regaccount))
+EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(convert)(withdraw)(regaccount))
