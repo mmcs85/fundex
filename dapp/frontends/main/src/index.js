@@ -8,6 +8,64 @@ import ScatterEOS from 'scatterjs-plugin-eosjs2';
 
 ScatterJS.plugins(new ScatterEOS())
 
+
+
+// -- detf contract --
+
+// create(const name& issuer, 
+// 	   std::vector<extended_asset> basket_units, 
+// 	   const asset&  maximum_supply)
+	   
+// issue(const name& account, 
+//       const asset& quantity,
+//  	  const string& memo )
+	  
+// redeem(const name& account, 
+//        const asset& quantity, 
+// 	   const string& memo )
+	   
+// transfer(const name& from,
+//          const name& to, 
+// 		 const asset& quantity, 
+// 		 const string&  memo ) -> deposits
+		 
+// withdraw(name account, 
+//          std::optional<extended_asset> amount)
+
+// -- detfdex contract --
+
+// create(const name& issuer, 
+//        uint64_t market_id, 
+// 	   string& name, 
+// 	   extended_asset& initial_base, 
+// 	   extended_asset& initial_quote)
+	   
+// convert(name account,
+// 	    uint64_t market_id,
+// 	    extended_asset& from,
+// 	    bool transfer)
+		
+// transfer( const name&    from,
+// 		   const name&    to,
+// 		   const asset&   quantity,
+// 		   const string&  memo ) -> deposits
+		   
+// withdraw(name account, 
+//          std::optional<extended_asset> amount)
+
+// - liquidaccounts -
+
+// vconvert(name vaccount
+//          uint64_t market_id
+//          extended_asset from)
+		 
+// vwithdraw(name vaccount
+//           name to
+//           std::optional<extended_asset> amount)
+
+
+
+
 // eosio endpoint
 // var debug = false;
 // var endpoint = "https://api.eosrio.io";
