@@ -25,6 +25,21 @@
     "localenv-extensions",
     "seed-eos",
     "eos-extensions",
-    "zeus-eos"
+    "zeus-eos",
+    "eos-common",
+    "events",
+    "eosio-system-contracts",
+    "eos-keystore",
+    "contract-migrations-extensions",
+    "test-extensions",
+    "build-extensions",
+    "ipfs-daemon",
+    "seed-microservices",
+    "upgrade-extensions",
+    "unbox-extensions",
+    "create-extensions",
+    "update-extensions",
+    "repo-zeusrepoeos",
+    "log-extensions"
   ]
 }
