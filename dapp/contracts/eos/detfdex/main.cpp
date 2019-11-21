@@ -130,25 +130,52 @@ CONTRACT_START()
     {
         check( from.quantity.symbol.is_valid(), "from asset invalid symbol name" );
         check( from.quantity.amount > 0, "from asset must be a positive quantity" );
-        check( initial_quote.quantity.amount > 0, "initial quote must be a positive quantity" );
+
 
         require_auth(account);
 
         deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(issuer.value);
+        auto deposit_itr = deposittable.find(account.value);
 
         check(deposit_itr != deposittable.end(), "A deposit must exist");
 
-        sub_deposit_asset(deposittable, issuer, from);
+        sub_deposit_asset(deposittable, account, from);
 
         markets markettable(_self, _self.value);
+        auto market_itr = markettable.find(market_id);
+        extended_asset out;
 
-        markettable.emplace(issuer, [&]( auto& m ) {
-            m.id = market_id;
-            m.name = name;
-            m.issuer = issuer;
-            m.base = initial_base;
-            m.quote = initial_quote;
+        markettable.modify(market_itr, account, [&]( auto& m ) {
+            out = m.convert(from);
+        });
+
+        eosio::action(permission_level(_self, name("active")),
+                out.contract, name("transfer"),
+                std::make_tuple(_self, account, out.quantity.amount, "convert asset action"))
+        .send();
+    }
+
+    [[eosio::action]] void withdraw(name account)
+    {
+        require_auth(account);
+
+        deposits deposittable(_self, _self.value);
+        auto deposit_itr = deposittable.find(account.value);
+
+        check(deposit_itr != deposittable.end(), "A deposit must exist");
+
+        auto deposit = *deposit_itr;
+
+        for ( auto const& asset: deposit.assetmap ) {
+
+            eosio::action(permission_level(_self, name("active")),
+                    asset.second.contract, name("transfer"),
+                    std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+            .send();
+        }
+
+        deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            d.assetmap.clear();
         });
     }
 
@@ -346,4 +373,4 @@ CONTRACT_START()
 
     VACCOUNTS_APPLY()
 };
-EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(regaccount))
+EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(convert)(withdraw)(regaccount))

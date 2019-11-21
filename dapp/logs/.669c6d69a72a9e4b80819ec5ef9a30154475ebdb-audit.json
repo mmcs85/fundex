@@ -6,24 +6,9 @@
     "auditLog": "logs/.669c6d69a72a9e4b80819ec5ef9a30154475ebdb-audit.json",
     "files": [
         {
-            "date": 1573997610897,
-            "name": "logs/pprovider1-dns-dapp-service-node-2019-11-17.log",
-            "hash": "dbc67e7ac7942d88686fa5755a7060b2"
-        },
-        {
-            "date": 1574074189766,
-            "name": "logs/pprovider1-dns-dapp-service-node-2019-11-18.log",
-            "hash": "92b8b62e33cd1f6857a7b57462502a3f"
-        },
-        {
-            "date": 1574196971791,
-            "name": "logs/pprovider1-dns-dapp-service-node-2019-11-19.log",
-            "hash": "8625fd332b3cebb57fdd5758048e74d6"
-        },
-        {
-            "date": 1574242572092,
-            "name": "logs/pprovider1-dns-dapp-service-node-2019-11-20.log",
-            "hash": "f873e1e72159790b7a88bf553f4fcf48"
+            "date": 1574295610962,
+            "name": "logs/pprovider1-dns-dapp-service-node-2019-11-21.log",
+            "hash": "e3382267c87d7e0ed4a428aeb5c28371"
         }
     ]
 }

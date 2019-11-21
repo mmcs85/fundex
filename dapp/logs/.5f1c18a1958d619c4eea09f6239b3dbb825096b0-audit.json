@@ -6,24 +6,9 @@
     "auditLog": "logs/.5f1c18a1958d619c4eea09f6239b3dbb825096b0-audit.json",
     "files": [
         {
-            "date": 1573997634209,
-            "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-17.log",
-            "hash": "d21c548143a286025f7860ea13533b5e"
-        },
-        {
-            "date": 1574074211975,
-            "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-18.log",
-            "hash": "011d136e697e0f200663ccb72d8c3345"
-        },
-        {
-            "date": 1574196990424,
-            "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-19.log",
-            "hash": "a7241878fb2d98988b08d1db82c071e8"
-        },
-        {
-            "date": 1574242594370,
-            "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-20.log",
-            "hash": "8a894d06ba64158f4e4c2e50f4e5252c"
+            "date": 1574295633146,
+            "name": "logs/pprovider2-ipfs-dapp-service-node-2019-11-21.log",
+            "hash": "9279eec5096b3beb458fd4a0669860f9"
         }
     ]
 }

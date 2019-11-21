@@ -6,24 +6,9 @@
     "auditLog": "logs/.016a27b0df58f03b3bd2ad7003c66b8a207eeca1-audit.json",
     "files": [
         {
-            "date": 1573997583020,
-            "name": "logs/pprovider1-demux-2019-11-17.log",
-            "hash": "4ce653054124824018aa3d7b820f940a"
-        },
-        {
-            "date": 1574074163368,
-            "name": "logs/pprovider1-demux-2019-11-18.log",
-            "hash": "87ed48b548dcfc3420f1bdc6ededaccb"
-        },
-        {
-            "date": 1574196948046,
-            "name": "logs/pprovider1-demux-2019-11-19.log",
-            "hash": "108238487b152bcc7957984b68b2c7c8"
-        },
-        {
-            "date": 1574242545924,
-            "name": "logs/pprovider1-demux-2019-11-20.log",
-            "hash": "c316fcaeeda4597d8995b293ab6a3e36"
+            "date": 1574295582200,
+            "name": "logs/pprovider1-demux-2019-11-21.log",
+            "hash": "43bd6e01d480e41630539aac6c8b31ea"
         }
     ]
 }

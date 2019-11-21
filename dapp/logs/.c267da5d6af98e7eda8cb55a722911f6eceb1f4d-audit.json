@@ -6,24 +6,9 @@
     "auditLog": "logs/.c267da5d6af98e7eda8cb55a722911f6eceb1f4d-audit.json",
     "files": [
         {
-            "date": 1573997657854,
-            "name": "logs/pprovider1-readfn-dapp-service-node-2019-11-17.log",
-            "hash": "1db42494badab65239502e165536fde9"
-        },
-        {
-            "date": 1574074232630,
-            "name": "logs/pprovider1-readfn-dapp-service-node-2019-11-18.log",
-            "hash": "81784d28078bbe9e24f59fa8ff802d09"
-        },
-        {
-            "date": 1574197008994,
-            "name": "logs/pprovider1-readfn-dapp-service-node-2019-11-19.log",
-            "hash": "b5ca1422da3181e072116391667c2e17"
-        },
-        {
-            "date": 1574242615640,
-            "name": "logs/pprovider1-readfn-dapp-service-node-2019-11-20.log",
-            "hash": "ab48f2b8d62f0253d3640c61d5e2cdb8"
+            "date": 1574295655863,
+            "name": "logs/pprovider1-readfn-dapp-service-node-2019-11-21.log",
+            "hash": "cdee83baaefdbd9c32f7a4683e6e8356"
         }
     ]
 }

@@ -6,24 +6,9 @@
     "auditLog": "logs/.87bbe30a552b026dddcaa35d7e818e7130e0705f-audit.json",
     "files": [
         {
-            "date": 1573997597850,
-            "name": "logs/pprovider2-auth-dapp-service-node-2019-11-17.log",
-            "hash": "0c6bacac6130b567061effe57e623b5a"
-        },
-        {
-            "date": 1574074177258,
-            "name": "logs/pprovider2-auth-dapp-service-node-2019-11-18.log",
-            "hash": "2dae45380eaf353d4e62fad4687be8fc"
-        },
-        {
-            "date": 1574196960655,
-            "name": "logs/pprovider2-auth-dapp-service-node-2019-11-19.log",
-            "hash": "8aaae934f1be153a12eba14d5fa8ba56"
-        },
-        {
-            "date": 1574242559972,
-            "name": "logs/pprovider2-auth-dapp-service-node-2019-11-20.log",
-            "hash": "85471ffcecbd40b2747fdb287acfe19b"
+            "date": 1574295595521,
+            "name": "logs/pprovider2-auth-dapp-service-node-2019-11-21.log",
+            "hash": "229fa83381802cbd06b837f6bdd78434"
         }
     ]
 }
