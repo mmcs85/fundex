@@ -205,27 +205,8 @@ CONTRACT_START()
             }
 
             deposits deposittable(_self, _self.value);
-            auto deposit_itr = deposittable.find(from.value);
-
-            const auto& unit_key = std::pair<uint64_t, uint64_t>(_first_receiver.value, quantity.symbol.code().raw());
             auto new_deposit_asset = extended_asset(quantity, _first_receiver);
-
-            if(deposit_itr == deposittable.end()) {
-                deposittable.emplace(from, [&](auto &d) {
-                    d.account = from;
-                    d.assetmap[unit_key] = new_deposit_asset;
-                });
-            } else {
-                deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-                    const auto& deposit_asset_itr = d.assetmap.find(unit_key);
-
-                    if(deposit_asset_itr == d.assetmap.end()) {
-                        d.assetmap[unit_key] = new_deposit_asset;
-                    } else {
-                        d.assetmap[unit_key] += new_deposit_asset;
-                    }
-                });
-            }
+            add_deposit_asset(deposittable, from, new_deposit_asset);
         }
       }
 
@@ -251,9 +232,55 @@ CONTRACT_START()
         deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
             d.assetmap.clear();
         });
-      }
+    }
 
    private:
+    void sub_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) 
+    {
+        auto deposit_itr = deposittable.find(account.value);
+        const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
+        const auto& deposit_asset_itr = deposit_itr->assetmap.find(asset_key);
+
+        check(deposit_asset_itr != deposit_itr->assetmap.end(), "required a deposit of the asset");
+
+        auto& deposit_asset = deposit_asset_itr->second;
+        auto asset_amount = deposit_asset.quantity.amount;
+        auto amt_amount = amt.quantity.amount;
+
+        check(asset_amount >= amt_amount, "not enough funds for this asset");
+
+        if(asset_amount == amt_amount) {
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                d.assetmap.erase(deposit_asset_itr);
+            });
+        } else {
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                d.assetmap[asset_key].quantity.amount -= amt_amount;
+            });
+        }
+    }
+
+    void add_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) {
+        auto deposit_itr = deposittable.find(account.value);
+        const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
+
+        if(deposit_itr == deposittable.end()) {
+            deposittable.emplace(account, [&](auto &d) {
+                d.account = account;
+                d.assetmap[asset_key] = amt;
+            });
+        } else {
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                const auto& deposit_asset_itr = d.assetmap.find(asset_key);
+
+                if(deposit_asset_itr == d.assetmap.end()) {
+                    d.assetmap[asset_key] = amt;
+                } else {
+                    d.assetmap[asset_key] += amt;
+                }
+            });
+        }
+    }
 
     void sub_balance( const name& owner, const asset& value ) {
         accounts from_acnts( get_self(), owner.value );

@@ -86,6 +86,10 @@ CONTRACT_START()
     typedef eosio::multi_index<".deposits"_n, deposit> deposits_v_abi;
     typedef eosio::multi_index<"deposits"_n, shardbucket> deposits_abi;
 
+    typedef dapp::multi_index<"vdeposits"_n, deposit> vdeposits;
+    typedef eosio::multi_index<".vdeposits"_n, deposit> vdeposits_v_abi;
+    typedef eosio::multi_index<"vdeposits"_n, shardbucket> vdeposits_abi;
+
     typedef dapp::multi_index<"markets"_n, market> markets;
     typedef eosio::multi_index<".markets"_n, market> markets_v_abi;
     typedef eosio::multi_index<"markets"_n, shardbucket> markets_abi;
@@ -115,7 +119,7 @@ CONTRACT_START()
 
         markets markettable(_self, _self.value);
 
-        markettable.emplace(issuer, [&]( auto& m ) {
+        markettable.emplace(_self, [&]( auto& m ) {
             m.id = market_id;
             m.name = name;
             m.issuer = issuer;
@@ -126,11 +130,11 @@ CONTRACT_START()
 
     [[eosio::action]] void convert(name account,
                                    uint64_t market_id,
-                                   extended_asset& from)
+                                   extended_asset& from
+                                   bool transfer)
     {
         check( from.quantity.symbol.is_valid(), "from asset invalid symbol name" );
         check( from.quantity.amount > 0, "from asset must be a positive quantity" );
-
 
         require_auth(account);
 
@@ -142,17 +146,86 @@ CONTRACT_START()
         sub_deposit_asset(deposittable, account, from);
 
         markets markettable(_self, _self.value);
-        auto market_itr = markettable.find(market_id);
-        extended_asset out;
 
-        markettable.modify(market_itr, account, [&]( auto& m ) {
+        extended_asset out = extended_asset();
+
+        markettable.emplace(_self, [&]( auto& m ) {
             out = m.convert(from);
         });
 
-        eosio::action(permission_level(_self, name("active")),
-                out.contract, name("transfer"),
-                std::make_tuple(_self, account, out.quantity.amount, "convert asset action"))
-        .send();
+        if(transfer) {
+            eosio::action(permission_level(_self, name("active")),
+                  out.contract, name("transfer"),
+                  std::make_tuple(_self, account, out.quantity.amount, "withdraw asset action"))
+            .send();
+        } else {
+            add_deposit_asset(deposittable, account, out);
+        }
+    }
+
+    struct action_vconvert {
+        name vaccount;
+        uint64_t market_id;
+        extended_asset from;
+
+        EOSLIB_SERIALIZE( action_vconvert, (vaccount)(market_id)(from) )
+    };
+
+    [[eosio::action]] void vconvert(action_vconvert payload)
+    {
+        check( payload.from.quantity.symbol.is_valid(), "from asset invalid symbol name" );
+        check( payload.from.quantity.amount > 0, "from asset must be a positive quantity" );
+
+        require_vaccount(payload.vaccount);
+
+        vdeposits vdeposittable(_self, _self.value);
+        auto deposit_itr = vdeposittable.find(payload.vaccount.value);
+
+        check(deposit_itr != vdeposittable.end(), "A deposit must exist");
+
+        sub_deposit_asset(vdeposittable, payload.vaccount, payload.from);
+
+        markets markettable(_self, _self.value);
+
+        extended_asset out = extended_asset();
+
+        markettable.emplace(_self, [&]( auto& m ) {
+            out = m.convert(from);
+        });
+
+        add_deposit_asset(vdeposittable, account, out);
+    }
+
+    //Handle deposit transfers only
+    void transfer( const name&    from,
+                   const name&    to,
+                   const asset&   quantity,
+                   const string&  memo )
+    {
+        check( from != to, "cannot transfer to self" );
+        require_auth( from );
+        check( is_account( to ), "to account does not exist");
+
+        if (from == _self ||
+            to != _self ||
+            (_first_receiver == name("eosio.token") &&
+            (from == name("eosio.stake") ||
+            from == name("eosio.ram"))))
+        {
+            return;
+        }
+
+        auto new_deposit_asset = extended_asset(quantity, _first_receiver);
+
+        if (memo.size() > 0) {
+          name to_act = name(memo.c_str());
+          check(is_account(to_act), "The account name supplied is not valid");          
+          vdeposits deposittable(_self, _self.value);
+          add_deposit_asset(deposittable, to_act, new_deposit_asset);
+        } else {
+          deposits deposittable(_self, _self.value);
+          add_deposit_asset(deposittable, to, new_deposit_asset);
+        }
     }
 
     [[eosio::action]] void withdraw(name account)
@@ -179,153 +252,9 @@ CONTRACT_START()
         });
     }
 
-    void transfer( const name&    from,
-                   const name&    to,
-                   const asset&   quantity,
-                   const string&  memo )
-    {
-        check( from != to, "cannot transfer to self" );
-        require_auth( from );
-        check( is_account( to ), "to account does not exist");
-
-        if (_first_receiver == _self ||
-            from == _self ||
-            to != _self ||
-            (_first_receiver == name("eosio.token") &&
-            (from == name("eosio.stake") ||
-            from == name("eosio.ram"))))
-        {
-            return;
-        }
-
-        deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(from.value);
-
-        const auto& unit_key = std::pair<uint64_t, uint64_t>(_first_receiver.value, quantity.symbol.code().raw());
-        auto new_deposit_asset = extended_asset(quantity, _first_receiver);
-
-        if(deposit_itr == deposittable.end()) {
-            deposittable.emplace(from, [&](auto &d) {
-                d.account = from;
-                d.assetmap[unit_key] = new_deposit_asset;
-            });
-        } else {
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-                const auto& deposit_asset_itr = d.assetmap.find(unit_key);
-
-                if(deposit_asset_itr == d.assetmap.end()) {
-                    d.assetmap[unit_key] = new_deposit_asset;
-                } else {
-                    d.assetmap[unit_key] += new_deposit_asset;
-                }
-            });
-        }
-    }
-
-    //   TABLE stat {
-    //       uint64_t   counter = 0;
-    //   };
-
-    //   typedef eosio::singleton<"stat"_n, stat> stats_def;
-    //   bool timer_callback(name timer, std::vector<char> payload, uint32_t seconds){
-
-    //     stats_def statstable(_self, _self.value);
-    //     stat newstats;
-    //     if(!statstable.exists()){
-    //       statstable.set(newstats, _self);
-    //     }
-    //     else{
-    //       newstats = statstable.get();
-    //     }
-    //     auto reschedule = false;
-    //     if(newstats.counter++ < 3){
-    //       reschedule = true;
-    //     }
-    //     statstable.set(newstats, _self);
-    //     return reschedule;
-    //     // reschedule
-
-    //   }
-    //  [[eosio::action]] void testschedule() {
-    //     std::vector<char> payload;
-    //     schedule_timer(_self, payload, 2);
-    //   }
-
-
-    //   struct dummy_action_hello {
-    //       name vaccount;
-    //       uint64_t b;
-    //       uint64_t c;
-
-    //       EOSLIB_SERIALIZE( dummy_action_hello, (vaccount)(b)(c) )
-    //   };
-
-    //   [[eosio::action]] void hello(dummy_action_hello payload) {
-    //     require_vaccount(payload.vaccount);
-
-    //     print("hello from ");
-    //     print(payload.vaccount);
-    //     print(" ");
-    //     print(payload.b + payload.c);
-    //     print("\n");
-    //   }
-
-    //   [[eosio::action]] void hello2(dummy_action_hello payload) {
-    //     print("hello2(default action) from ");
-    //     print(payload.vaccount);
-    //     print(" ");
-    //     print(payload.b + payload.c);
-    //     print("\n");
-    //   }
-
-
-
-    //   TABLE account {
-    //      extended_asset balance;
-    //      uint64_t primary_key()const { return balance.contract.value; }
-    //   };
-
-    //   typedef dapp::multi_index<"vaccounts"_n, account> cold_accounts_t;
-    //   typedef eosio::multi_index<".vaccounts"_n, account> cold_accounts_t_v_abi;
-    //   TABLE shardbucket {
-    //       std::vector<char> shard_uri;
-    //       uint64_t shard;
-    //       uint64_t primary_key() const { return shard; }
-    //   };
-    //   typedef eosio::multi_index<"vaccounts"_n, shardbucket> cold_accounts_t_abi;
-
-
-    //  [[eosio::action]] void withdraw( name to, name token_contract){
-
-    //         require_auth( to );
-    //         require_recipient( to );
-    //         auto received = sub_all_cold_balance(to, token_contract);
-    //         action(permission_level{_self, "active"_n}, token_contract, "transfer"_n,
-    //            std::make_tuple(_self, to, received, std::string("withdraw")))
-    //         .send();
-    //   }
-
-    //  void transfer( name from,
-    //                  name to,
-    //                  asset        quantity,
-    //                  string       memo ){
-    //     require_auth(from);
-    //     if(to != _self || from == _self || from == "eosio"_n || from == "eosio.stake"_n || from == to)
-    //         return;
-    //     if(memo == "seed transfer")
-    //         return;
-    //     if (memo.size() > 0){
-    //       name to_act = name(memo.c_str());
-    //       eosio::check(is_account(to_act), "The account name supplied is not valid");
-    //       require_recipient(to_act);
-    //       from = to_act;
-    //     }
-    //     extended_asset received(quantity, get_first_receiver());
-    //     add_cold_balance(from, received);
-    //  }
-
    private:
-      void sub_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) {
+      void sub_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) 
+      {
         auto deposit_itr = deposittable.find(account.value);
         const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
         const auto& deposit_asset_itr = deposit_itr->assetmap.find(asset_key);
@@ -349,28 +278,28 @@ CONTRACT_START()
         }
     }
 
-      /*extended_asset sub_all_cold_balance( name owner, name token_contract){
-           cold_accounts_t from_acnts( _self, owner.value );
-           const auto& from = from_acnts.get( token_contract.value, "no balance object found" );
-           auto res = from.balance;
-           from_acnts.erase( from );
-           return res;
-      }
+    void add_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) {
+        auto deposit_itr = deposittable.find(account.value);
+        const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
 
-      void add_cold_balance( name owner, extended_asset value){
-           cold_accounts_t to_acnts( _self, owner.value );
-           auto to = to_acnts.find( value.contract.value );
-           if( to == to_acnts.end() ) {
-              to_acnts.emplace(_self, [&]( auto& a ){
-                a.balance = value;
-              });
-           } else {
-              to_acnts.modify( *to, eosio::same_payer, [&]( auto& a ) {
-                a.balance += value;
-              });
-           }
-      }*/
+        if(deposit_itr == deposittable.end()) {
+            deposittable.emplace(account, [&](auto &d) {
+                d.account = account;
+                d.assetmap[asset_key] = amt;
+            });
+        } else {
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                const auto& deposit_asset_itr = d.assetmap.find(asset_key);
 
-    VACCOUNTS_APPLY()
+                if(deposit_asset_itr == d.assetmap.end()) {
+                    d.assetmap[asset_key] = amt;
+                } else {
+                    d.assetmap[asset_key] += amt;
+                }
+            });
+        }
+    }
+
+    VACCOUNTS_APPLY(((action_vconvert)(vconvert)))
 };
-EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(convert)(withdraw)(regaccount))
+EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(regaccount))
