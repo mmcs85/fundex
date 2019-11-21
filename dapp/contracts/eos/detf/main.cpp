@@ -208,10 +208,10 @@ CONTRACT_START()
             auto new_deposit_asset = extended_asset(quantity, _first_receiver);
             add_deposit_asset(deposittable, from, new_deposit_asset);
         }
-      }
+     }
 
-      [[eosio::action]] void withdraw(name account)
-      {
+    [[eosio::action]] void withdraw(name account, std::optional<extended_asset> amount)
+    {
         require_auth(account);
 
         deposits deposittable(_self, _self.value);
@@ -221,21 +221,35 @@ CONTRACT_START()
 
         auto deposit = *deposit_itr;
 
-        for ( auto const& asset: deposit.assetmap ) {
+        if (amount != std::nullopt) {
+            auto wamount = amount.value();
+            check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
+            check( wamount.quantity.amount > 0, "must be a positive quantity" );
+
+            sub_deposit_asset(deposittable, account, wamount);
 
             eosio::action(permission_level(_self, name("active")),
-                    asset.second.contract, name("transfer"),
-                    std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+                    wamount.contract, name("transfer"),
+                    std::make_tuple(_self, account, wamount.quantity.amount, "withdraw asset action"))
             .send();
-        }
+        } else {
+            for ( auto const& asset: deposit.assetmap ) {
+                eosio::action(permission_level(_self, name("active")),
+                        asset.second.contract, name("transfer"),
+                        std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+                .send();
+            }
 
-        deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-            d.assetmap.clear();
-        });
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                d.assetmap.clear();
+            });
+        }
     }
 
    private:
-    void sub_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) 
+    
+    template<typename T>
+    void sub_deposit_asset(T& deposittable, name account, const extended_asset& amt) 
     {
         auto deposit_itr = deposittable.find(account.value);
         const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
@@ -260,7 +274,8 @@ CONTRACT_START()
         }
     }
 
-    void add_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) {
+    template<typename T>
+    void add_deposit_asset(T& deposittable, name account, const extended_asset& amt) {
         auto deposit_itr = deposittable.find(account.value);
         const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
 

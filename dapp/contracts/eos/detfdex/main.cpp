@@ -130,7 +130,7 @@ CONTRACT_START()
 
     [[eosio::action]] void convert(name account,
                                    uint64_t market_id,
-                                   extended_asset& from
+                                   extended_asset& from,
                                    bool transfer)
     {
         check( from.quantity.symbol.is_valid(), "from asset invalid symbol name" );
@@ -190,10 +190,10 @@ CONTRACT_START()
         extended_asset out = extended_asset();
 
         markettable.emplace(_self, [&]( auto& m ) {
-            out = m.convert(from);
+            out = m.convert(payload.from);
         });
 
-        add_deposit_asset(vdeposittable, account, out);
+        add_deposit_asset(vdeposittable, payload.vaccount, out);
     }
 
     //Handle deposit transfers only
@@ -228,7 +228,7 @@ CONTRACT_START()
         }
     }
 
-    [[eosio::action]] void withdraw(name account)
+    [[eosio::action]] void withdraw(name account, std::optional<extended_asset> amount)
     {
         require_auth(account);
 
@@ -239,21 +239,79 @@ CONTRACT_START()
 
         auto deposit = *deposit_itr;
 
-        for ( auto const& asset: deposit.assetmap ) {
+        if (amount != std::nullopt) {
+            auto wamount = amount.value();
+            check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
+            check( wamount.quantity.amount > 0, "must be a positive quantity" );
+
+            sub_deposit_asset(deposittable, account, wamount);
 
             eosio::action(permission_level(_self, name("active")),
-                    asset.second.contract, name("transfer"),
-                    std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+                    wamount.contract, name("transfer"),
+                    std::make_tuple(_self, account, wamount.quantity.amount, "withdraw asset action"))
             .send();
-        }
+        } else {
+            for ( auto const& asset: deposit.assetmap ) {
+                eosio::action(permission_level(_self, name("active")),
+                        asset.second.contract, name("transfer"),
+                        std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+                .send();
+            }
 
-        deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-            d.assetmap.clear();
-        });
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                d.assetmap.clear();
+            });
+        }
+    }
+
+    struct action_vwithdraw {
+        name vaccount;
+        name to;
+        std::optional<extended_asset> amount;
+
+        EOSLIB_SERIALIZE( action_vwithdraw, (vaccount)(to)(amount) )
+    };
+
+    [[eosio::action]] void vwithdraw(action_vwithdraw payload)
+    {
+        require_vaccount(payload.vaccount);
+
+        vdeposits vdeposittable(_self, _self.value);
+        auto deposit_itr = vdeposittable.find(payload.vaccount.value);
+
+        check(deposit_itr != vdeposittable.end(), "A deposit must exist");
+
+        auto deposit = *deposit_itr;
+
+        if (payload.amount != std::nullopt) {
+            auto wamount = payload.amount.value();
+            check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
+            check( wamount.quantity.amount > 0, "must be a positive quantity" );
+
+            sub_deposit_asset(vdeposittable, payload.vaccount, wamount);
+
+            eosio::action(permission_level(_self, name("active")),
+                    wamount.contract, name("transfer"),
+                    std::make_tuple(_self, payload.to, wamount.quantity.amount, "withdraw asset action"))
+            .send();
+        } else {
+            for ( auto const& asset: deposit.assetmap ) {
+                eosio::action(permission_level(_self, name("active")),
+                        asset.second.contract, name("transfer"),
+                        std::make_tuple(_self, payload.to, asset.second.quantity.amount, "withdraw asset action"))
+                .send();
+            }
+
+            vdeposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                d.assetmap.clear();
+            });
+        }
     }
 
    private:
-      void sub_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) 
+
+      template<typename T>
+      void sub_deposit_asset(T& deposittable, name account, const extended_asset& amt)
       {
         auto deposit_itr = deposittable.find(account.value);
         const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
@@ -278,7 +336,8 @@ CONTRACT_START()
         }
     }
 
-    void add_deposit_asset(deposits& deposittable, name account, const extended_asset& amt) {
+    template<typename T>
+    void add_deposit_asset(T& deposittable, name account, const extended_asset& amt) {
         auto deposit_itr = deposittable.find(account.value);
         const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
 
@@ -300,6 +359,6 @@ CONTRACT_START()
         }
     }
 
-    VACCOUNTS_APPLY(((action_vconvert)(vconvert)))
+    VACCOUNTS_APPLY(((action_vconvert)(vconvert))((action_vwithdraw)(vwithdraw)))
 };
-EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(regaccount))
+EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(convert)(withdraw)(regaccount))
