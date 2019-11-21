@@ -47,8 +47,7 @@ if (local) {
 
 network = ScatterJS.Network.fromJson(network)
 
-// var ScatterJS = window.ScatterJS;
-async function init () {
+async function setupScatter() {
   const scatter = window.scatter;
 
   const requiredFields = { accounts: [network] };
@@ -66,8 +65,32 @@ async function init () {
     beta3: true
   })
   window.eos = eos;
+}
 
-
+// var ScatterJS = window.ScatterJS;
+async function init () {
+  await setupScatter();
+  const eos = window.eos;
+  
+  const result = await eos.transact({
+    actions: [{
+      account: 'eosio.token',
+      name: 'transfer',
+      authorization: [{
+        actor: 'player1',
+        permission: 'active',
+      }],
+      data: {
+        from: 'useraaaaaaaa',
+        to: 'useraaaaaaab',
+        quantity: '0.0001 SYS',
+        memo: '',
+      },
+    }]
+  }, {
+    blocksBehind: 3,
+    expireSeconds: 30,
+  });
 }
 
 ScatterJS.scatter.connect('liquidWings').then((connected) => {
