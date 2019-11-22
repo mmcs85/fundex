@@ -162,7 +162,7 @@ export default function(eos, dappClient) {
 
     getDetfStat: async function(code, symbolCode) {
         const service = await dappClient.service('ipfs', code);
-        const response = await service.get_vram_row(code, code, 'stat', key );
+        const response = await service.get_vram_row(code, code, 'stat', symbolCode );
         console.log(response);
         return response;
     },

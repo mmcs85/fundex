@@ -6,7 +6,11 @@ import { Api, JsonRpc } from 'eosjs';
 import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig';
 import ScatterJS from 'scatterjs-core';
 import ScatterEOS from 'scatterjs-plugin-eosjs2';
+import { createClient } from '@liquidapps/dapp-client';
+
 import EosHelper from './eosHelper'
+import DetfHelper from './detfHelper'
+import DetfdexHelper from './detfdexHelper'
 
 ScatterJS.plugins(new ScatterEOS())
 
@@ -49,6 +53,10 @@ if (local) {
 
 network = ScatterJS.Network.fromJson(network)
 
+async function setupDspClient() {
+    window.dspClient = await createClient({ httpEndpoint: network.fullhost(), fetch: window.fetch.bind(window) });
+}
+
 async function setupScatter() {
   const scatter = window.scatter;
 
@@ -80,10 +88,14 @@ function setupDefaultEos() {
 async function init () {
   setupDefaultEos();
   await setupScatter();
+  await setupDspClient();
   const scatterEos = window.scatterEos;
   const eos = window.eos;
+  const dspClient = window.dspClient;   
 
   const eosHelper = new EosHelper(eos);
+  const detfHelper = new DetfHelper(eos, dspClient);
+  const detfdexHelper = new DetfdexHelper(eos, dspClient);
 }
 
 ScatterJS.scatter.connect('liquidWings').then((connected) => {
