@@ -15,55 +15,147 @@ ScatterJS.plugins(new ScatterEOS())
 // create(const name& issuer, 
 // 	   std::vector<extended_asset> basket_units, 
 // 	   const asset&  maximum_supply)
+
+// {
+//     name: "issuer",
+//     basket_units: [{
+//         contract: 'btc.token',
+//         quantity: '0.0001 EBTC'
+//     },
+//     {
+//         contract: 'eosio.token',
+//         quantity: '0.0001 EOS'
+//     },
+//     {
+//         contract: 'eosio.dapp',
+//         quantity: '0.0001 DAPP'
+//     }],
+//     maximum_supply: '100000000.0000 ETF'
+// }
 	   
 // issue(const name& account, 
 //       const asset& quantity,
 //  	  const string& memo )
+
+// {
+//     account: 'zach',
+//     quantity: '0.1000 ETF',
+//     memo: 'get etf tokens'
+// }
 	  
 // redeem(const name& account, 
 //        const asset& quantity, 
 // 	   const string& memo )
+
+// {
+//     account: 'zach',
+//     quantity: '0.1000 ETF',
+//     memo: 'get etf tokens'
+// }
 	   
 // transfer(const name& from,
 //          const name& to, 
 // 		 const asset& quantity, 
-// 		 const string&  memo ) -> deposits
+// 		 const string&  memo ) 
+
+// -> deposits / trasfers of etfs
 		 
 // withdraw(name account, 
 //          std::optional<extended_asset> amount)
 
-// -- detfdex contract --
+//------------------------
+// -- detfdex contract -- EXCHANGE
+//------------------------
 
 // create(const name& issuer, 
 //        uint64_t market_id, 
 // 	   string& name, 
 // 	   extended_asset& initial_base, 
 // 	   extended_asset& initial_quote)
+
+// {
+//     issuer: 'zach',
+//     market_id: 123456,
+//     name: "super ETF/USDT",
+//     initial_base: {
+//         contract: 'etf.token',
+//         quantity: '0.0001 ETF'
+//     },
+//     initial_quote: {
+//         contract: 'usdt.token',
+//         quantity: '1.0000 USDT'
+//     }
+// }
 	   
 // convert(name account,
 // 	    uint64_t market_id,
 // 	    extended_asset& from,
-// 	    bool transfer)
-		
+// 	    bool transfer) - true, deposits to account / false, keeps as credit
+
+// {
+//     name: 'zach',
+//     market_id: 123456,
+//     initial_base: {
+//         contract: 'usdt.token',
+//         quantity: '1.0000 USDT'
+//     }
+// }
+    
+// - only for deposits..
 // transfer( const name&    from,
 // 		   const name&    to,
 // 		   const asset&   quantity,
 // 		   const string&  memo ) -> deposits
-		   
+
+// withdraw from deposits.
 // withdraw(name account, 
 //          std::optional<extended_asset> amount)
 
 // - liquidaccounts -
 
+// regaccount(name vaccount, publio_key pubkey)
+// const response = await service.push_liquid_account_transaction(
+//         "vacctstst123",
+//         "5JMUyaQ4qw6Zt816B1kWJjgRA5cdEE6PhCb2BW45rU8GBEDa1RC",
+//         "regaccount",
+//         {
+//             vaccount: 'testing126' // increment to new account if fails
+//         }
+//     );
+
+// retail customers (not market makers/etf issuers)
 // vconvert(name vaccount
 //          uint64_t market_id
 //          extended_asset from)
-		 
+
+// const response = await service.push_liquid_account_transaction(
+//         "vacctstst123",
+//         "5JMUyaQ4qw6Zt816B1kWJjgRA5cdEE6PhCb2BW45rU8GBEDa1RC",
+//         "hello",
+//         {
+//             vaccount: 'testing124',
+//             market_id: 1,
+//             from: {
+//                 contract: 'usdt.token',
+//                 quantity: '1.0000 USDT'
+//             }
+//         }
+//     );
+
 // vwithdraw(name vaccount
 //           name to
 //           std::optional<extended_asset> amount)
 
-
+// const response = await service.push_liquid_account_transaction(
+//         "vacctstst123",
+//         "5JMUyaQ4qw6Zt816B1kWJjgRA5cdEE6PhCb2BW45rU8GBEDa1RC",
+//         "hello",
+//         {
+//             vaccount: 'testing124',
+//             b: 1,
+//             c: 2
+//         }
+//     );
 
 
 // eosio endpoint
