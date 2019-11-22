@@ -9,6 +9,11 @@
             "date": 1574295659955,
             "name": "logs/pprovider2-readfn-dapp-service-node-2019-11-21.log",
             "hash": "51ff7650de4470ef9a6aa2a923a47b2e"
+        },
+        {
+            "date": 1574431906270,
+            "name": "logs/pprovider2-readfn-dapp-service-node-2019-11-22.log",
+            "hash": "e8fbfcd6a25b16295d27468dd35b8472"
         }
     ]
 }

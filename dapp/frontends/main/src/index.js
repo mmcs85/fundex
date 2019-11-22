@@ -3,160 +3,12 @@ import ReactDOM from 'react-dom';
 import Index from './pages/index';
 
 import { Api, JsonRpc } from 'eosjs';
+import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig';
 import ScatterJS from 'scatterjs-core';
 import ScatterEOS from 'scatterjs-plugin-eosjs2';
+import EosHelper from './eosHelper'
 
 ScatterJS.plugins(new ScatterEOS())
-
-
-
-// -- detf contract --
-
-// create(const name& issuer, 
-// 	   std::vector<extended_asset> basket_units, 
-// 	   const asset&  maximum_supply)
-
-// {
-//     name: "issuer",
-//     basket_units: [{
-//         contract: 'btc.token',
-//         quantity: '0.0001 EBTC'
-//     },
-//     {
-//         contract: 'eosio.token',
-//         quantity: '0.0001 EOS'
-//     },
-//     {
-//         contract: 'eosio.dapp',
-//         quantity: '0.0001 DAPP'
-//     }],
-//     maximum_supply: '100000000.0000 ETF'
-// }
-	   
-// issue(const name& account, 
-//       const asset& quantity,
-//  	  const string& memo )
-
-// {
-//     account: 'zach',
-//     quantity: '0.1000 ETF',
-//     memo: 'get etf tokens'
-// }
-	  
-// redeem(const name& account, 
-//        const asset& quantity, 
-// 	   const string& memo )
-
-// {
-//     account: 'zach',
-//     quantity: '0.1000 ETF',
-//     memo: 'get etf tokens'
-// }
-	   
-// transfer(const name& from,
-//          const name& to, 
-// 		 const asset& quantity, 
-// 		 const string&  memo ) 
-
-// -> deposits / trasfers of etfs
-		 
-// withdraw(name account, 
-//          std::optional<extended_asset> amount)
-
-//------------------------
-// -- detfdex contract -- EXCHANGE
-//------------------------
-
-// create(const name& issuer, 
-//        uint64_t market_id, 
-// 	   string& name, 
-// 	   extended_asset& initial_base, 
-// 	   extended_asset& initial_quote)
-
-// {
-//     issuer: 'zach',
-//     market_id: 123456,
-//     name: "super ETF/USDT",
-//     initial_base: {
-//         contract: 'etf.token',
-//         quantity: '0.0001 ETF'
-//     },
-//     initial_quote: {
-//         contract: 'usdt.token',
-//         quantity: '1.0000 USDT'
-//     }
-// }
-	   
-// convert(name account,
-// 	    uint64_t market_id,
-// 	    extended_asset& from,
-// 	    bool transfer) - true, deposits to account / false, keeps as credit
-
-// {
-//     name: 'zach',
-//     market_id: 123456,
-//     initial_base: {
-//         contract: 'usdt.token',
-//         quantity: '1.0000 USDT'
-//     }
-// }
-    
-// - only for deposits..
-// transfer( const name&    from,
-// 		   const name&    to,
-// 		   const asset&   quantity,
-// 		   const string&  memo ) -> deposits
-
-// withdraw from deposits.
-// withdraw(name account, 
-//          std::optional<extended_asset> amount)
-
-// - liquidaccounts -
-
-// regaccount(name vaccount, publio_key pubkey)
-// const response = await service.push_liquid_account_transaction(
-//         "vacctstst123",
-//         "5JMUyaQ4qw6Zt816B1kWJjgRA5cdEE6PhCb2BW45rU8GBEDa1RC",
-//         "regaccount",
-//         {
-//             vaccount: 'testing126' // increment to new account if fails
-//         }
-//     );
-
-// retail customers (not market makers/etf issuers)
-// vconvert(name vaccount
-//          uint64_t market_id
-//          extended_asset from)
-
-// const response = await service.push_liquid_account_transaction(
-//         "vacctstst123",
-//         "5JMUyaQ4qw6Zt816B1kWJjgRA5cdEE6PhCb2BW45rU8GBEDa1RC",
-//         "hello",
-//         {
-//             vaccount: 'testing124',
-//             market_id: 1,
-//             from: {
-//                 contract: 'usdt.token',
-//                 quantity: '1.0000 USDT'
-//             }
-//         }
-//     );
-
-// vwithdraw(name vaccount
-//           name to
-//           std::optional<extended_asset> amount)
-
-// const response = await service.push_liquid_account_transaction(
-//         "vacctstst123",
-//         "5JMUyaQ4qw6Zt816B1kWJjgRA5cdEE6PhCb2BW45rU8GBEDa1RC",
-//         "hello",
-//         {
-//             vaccount: 'testing124',
-//             b: 1,
-//             c: 2
-//         }
-//     );
-
 
 // eosio endpoint
 // var debug = false;
@@ -190,9 +42,9 @@ if (jungle) {
 
 if (local) {
   network.chainId = 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f';
-  network.port = 8888;
-  network.host = '54.186.222.85';
-  network.protocol = 'http';
+  network.port = 443;
+  network.host = '8888-de82ebec-941c-4022-9e70-3175509c7335.ws-eu01.gitpod.io';
+  network.protocol = 'https';
 }
 
 network = ScatterJS.Network.fromJson(network)
@@ -202,6 +54,7 @@ async function setupScatter() {
 
   const requiredFields = { accounts: [network] };
   // Use `scatter` normally now.  
+  await scatter.forgetIdentity();
 
   await scatter.getIdentity(requiredFields);
   const account = scatter.identity.accounts.find(x => x.blockchain === 'eos');
@@ -214,33 +67,23 @@ async function setupScatter() {
     rpc,
     beta3: true
   })
-  window.eos = eos;
+  window.scatterEos = eos;
 }
 
-// var ScatterJS = window.ScatterJS;
+function setupDefaultEos() {
+    const defaultPrivateKey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
+    const signatureProvider = new JsSignatureProvider([defaultPrivateKey]);
+    const rpc = new JsonRpc(network.fullhost())
+    window.eos = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
+}
+
 async function init () {
+  setupDefaultEos();
   await setupScatter();
+  const scatterEos = window.scatterEos;
   const eos = window.eos;
-  
-  const result = await eos.transact({
-    actions: [{
-      account: 'eosio.token',
-      name: 'transfer',
-      authorization: [{
-        actor: 'player1',
-        permission: 'active',
-      }],
-      data: {
-        from: 'useraaaaaaaa',
-        to: 'useraaaaaaab',
-        quantity: '0.0001 SYS',
-        memo: '',
-      },
-    }]
-  }, {
-    blocksBehind: 3,
-    expireSeconds: 30,
-  });
+
+  const eosHelper = new EosHelper(eos);
 }
 
 ScatterJS.scatter.connect('liquidWings').then((connected) => {
