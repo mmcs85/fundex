@@ -51,6 +51,9 @@ if (local) {
   network.protocol = 'https';
 }
 
+const defaultPrivateKey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
+const defaultPubKey = "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV";
+
 network = ScatterJS.Network.fromJson(network)
 
 async function setupDspClient() {
@@ -79,31 +82,63 @@ async function setupScatter() {
 }
 
 function setupDefaultEos() {
-    const defaultPrivateKey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
+    
     const signatureProvider = new JsSignatureProvider([defaultPrivateKey]);
     const rpc = new JsonRpc(network.fullhost())
     window.eos = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
 }
 
 async function init () {
-  setupDefaultEos();
-  await setupScatter();
+  //await setupScatter();
+
+  setupDefaultEos();  
   await setupDspClient();
-  const scatterEos = window.scatterEos;
+  //const scatterEos = window.scatterEos;
   const eos = window.eos;
-  const dspClient = window.dspClient;   
+  const dspClient = window.dspClient;
 
   const eosHelper = new EosHelper(eos);
   const detfHelper = new DetfHelper(eos, dspClient);
   const detfdexHelper = new DetfdexHelper(eos, dspClient);
+
+  await seedContractTokens(eosHelper);
+  await seedAccounts(eosHelper);
 }
 
-ScatterJS.scatter.connect('liquidWings').then((connected) => {
-  if (!connected) {
-    return false;
-  }
-  window.scatter = ScatterJS.scatter;
-  init();
-})
+async function seedAccounts(eosHelper) {
+    const accounts = ['liquidmarios', 'liquidzachal', 'liquidpeters'];
+    const tokens = ['SYS', 'EOS', 'DAPP', 'ETH', 'BTC', 'GOLD', 'USDT', 'EURT'];
+
+    try { 
+        for(let acc of accounts) {
+            await eosHelper.createAccount(acc, defaultPubKey);
+        }
+    } catch(e){};
+
+    for(let acc of accounts) {
+        for(let token of tokens) {
+            await eosHelper.issueToken('eosio', acc, `1000.0000 ${token}`, 'give funds');
+        }
+    }
+}
+
+async function seedContractTokens(eosHelper) {
+    try {
+        const tokens = ['EOS', 'DAPP', 'ETH', 'BTC', 'GOLD', 'USDT', 'EURT'];
+        for(let token of tokens) {
+            await eosHelper.createToken('eosio', `1000000000.0000 ${token}`);
+        }
+    } catch(e){};    
+}
+
+init();
+
+// ScatterJS.scatter.connect('liquidWings').then((connected) => {
+//   if (!connected) {
+//     return false;
+//   }
+//   window.scatter = ScatterJS.scatter;
+  
+// })
 
 ReactDOM.render(<Index />, document.getElementById('root'));
