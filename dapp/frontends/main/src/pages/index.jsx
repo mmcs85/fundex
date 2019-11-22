@@ -1,72 +1,89 @@
 import React, { Component } from 'react';
 
-// material-ui dependencies
-import { withStyles } from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
 
-// const theme = createMuiTheme({
-  // palette: {
-  //   type: 'dark',
-  // },
-// });
+import {
+    Button,
+    Container,
+    Divider,
+    Grid,
+    Header,
+    Icon,
+    Image,
+    List,
+    Menu,
+    Responsive,
+    Segment,
+    Sidebar,
+    Visibility,
+    Form,
+    Message,
+    Search
+} from 'semantic-ui-react'
 
-// set up styling classes using material-ui "withStyles"
-const styles = theme => ({
-  paper: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-  },
-  formButton: {
-    marginTop: theme.spacing.unit,
-    width: "100%",
-  },
-  pre: {
-    // background: "#eee",
-    padding: 4,
-    marginBottom: 0.
-  }
-});
+
 
 // Index component
 class Index extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-    };
-  }
+    constructor(props) {
+        super(props)
+        this.state = {
+        };
+    }
 
 
-  componentDidMount() {
-  }
+    componentDidMount() {
+    }
 
 
-  render() {
-    let { loading } = this.state;
-    var loader = loading ? <img src="loader.svg"/> : <span/>
-    return (
-      // <MuiThemeProvider theme={theme}>
-        <div style={{height: "100%", width: "100%"}}>
-          <AppBar position="static" style={{background:"#dddddd"}} >
-            <Toolbar>
-              <div style={{"display": "flex", "alignItems":"center"}} >
-                <img alt='logo' src="eos-logo.png" width="64" height="64"/> 
-                <Typography variant="title" color="inherit">
-                  <div style={{"marginLeft":"15px", color:"black"}}> </div>
-                </Typography>
-              </div>
-            </Toolbar>
-          </AppBar>
-        
-        <br/>
-          {loader}
-        </div>
-      // </MuiThemeProvider>
-    );
-  }
+    render() {
+
+        return (
+            <div>
+
+
+                <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
+                    <Grid.Column style={{ maxWidth: 500 }}>
+                        <Header as='h2' style={{ color: 'white' }} textAlign='center'>
+                            Logo Here
+      </Header>
+                        <Form size='large'>
+                            <Segment stacked>
+
+                                <Grid columns={2} stackable textAlign='center'>
+                                    <Divider vertical>Or</Divider>
+
+                                    <Grid.Row verticalAlign='middle'>
+                                        <Grid.Column>
+                                            <Header icon>
+                                                <Icon name='search' />
+                                                Browse ETFs
+          </Header>
+
+                                            <Search placeholder='Enter ETF ticker...' />
+                                        </Grid.Column>
+
+                                        <Grid.Column>
+                                            <Header icon>
+                                                <Icon name='user' />
+                                                Create an account
+          </Header>
+                                            <Button primary>Sign up</Button>
+                                        </Grid.Column>
+                                    </Grid.Row>
+                                </Grid>
+
+
+                            </Segment>
+                            <br />
+                            &copy; 2019, Liquidwings
+                        </Form>
+                    </Grid.Column>
+                </Grid>
+            </div>
+
+        )
+    }
 
 }
 
-export default withStyles(styles)(Index);
+export default Index;
