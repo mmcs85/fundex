@@ -15,3 +15,5 @@ zeus create contract mycontract
 # edit your contract under dapp/contracts/eos/mycontract
 zeus test
 ```
+
+test commit from separate gitpod - zach
