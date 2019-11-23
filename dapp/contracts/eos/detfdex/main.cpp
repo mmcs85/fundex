@@ -9,6 +9,7 @@
   IPFS_SVC_COMMANDS()VACCOUNTS_SVC_COMMANDS()
 #define CONTRACT_NAME() detfdex
 #define DELAYED_CLEANUP 60
+#define FEE_PRECISION 1000
 using std::string;
 
 std::string extended_asset_to_string(const extended_asset& asset) {
@@ -32,6 +33,7 @@ CONTRACT_START()
         uint64_t id;
         name issuer;
         string name;
+        uint64_t fee;
         extended_asset base;
         extended_asset quote;
 
@@ -105,6 +107,7 @@ CONTRACT_START()
 
     [[eosio::action]] void create(const name& issuer,
                                   uint64_t market_id,
+                                  uint64_t fee,
                                   string& name,
                                   extended_asset& initial_base,
                                   extended_asset& initial_quote)
@@ -128,9 +131,63 @@ CONTRACT_START()
         markettable.emplace(_self, [&]( auto& m ) {
             m.id = market_id;
             m.name = name;
+            m.fee = fee;
             m.issuer = issuer;
             m.base = initial_base;
             m.quote = initial_quote;
+        });
+    }
+
+    [[eosio::action]] void retire(const name& issuer,
+                                  uint64_t market_id)
+    {
+        require_auth(issuer);
+
+        markets markettable(_self, _self.value, 1024, 64, false, false, DELAYED_CLEANUP);
+        auto market_itr = markettable.find(market_id);
+
+        check(market_itr->issuer == issuer, "only market creator can retire fund");
+
+        markettable.erase(market_itr);
+
+        eosio::action(permission_level(_self, name("active")),
+            market->base.contract, name("transfer"),
+            std::make_tuple(_self, issuer, market->base.quantity, std::string("withdraw asset action")))
+        .send();
+
+        eosio::action(permission_level(_self, name("active")),
+            market->quote.contract, name("transfer"),
+            std::make_tuple(_self, issuer, market->quote.quantity, std::string("withdraw asset action")))
+        .send();
+    }
+
+    [[eosio::action]] void fund(const name& issuer,
+                                uint64_t market_id,
+                                extended_asset& base,
+                                extended_asset& quote)
+    {
+        check( base.quantity.symbol.is_valid(), "base asset invalid symbol name" );
+        check( quote.quantity.symbol.is_valid(), "quote asset invalid symbol name" );
+        check( base.quantity.amount > 0, "base must be a positive quantity" );
+        check( quote.quantity.amount > 0, "quote must be a positive quantity" );
+        check( base.quantity.symbol.precision() == quote.quantity.symbol.precision(),
+         "base precision must match quote precision");
+
+        require_auth(issuer);
+
+        markets markettable(_self, _self.value, 1024, 64, false, false, DELAYED_CLEANUP);
+        auto market_itr = markettable.find(market_id);
+
+        check(market_itr->issuer == issuer, "only market creator is allowed to fund");
+
+        deposits deposittable(_self, account.value);
+
+        sub_deposit_asset(deposittable, base);
+        sub_deposit_asset(deposittable, quote);
+
+        markettable.modify(market_itr, _self, [&]( auto& m ) {
+            m.base += base;
+            m.quote += quote;
         });
     }
 
@@ -152,9 +209,19 @@ CONTRACT_START()
 
         extended_asset out = extended_asset();
 
+        auto from_fee = from.quantity * market.fee / FEE_PRECISION;
+        check(from_fee.quantity.amount >= 0, "order is to low to charge fee");
+
         markettable.modify(market_itr, _self, [&]( auto& m ) {
-            out = m.convert(from);
+            out = m.convert(from-from_fee);
         });
+
+        auto out_fee = out.quantity * market.fee / FEE_PRECISION;
+        check(out_fee.quantity.amount >= 0, "order is to low to charge fee");
+
+        deposits issuer_deposittable(_self, market.issuer.value);
+        add_deposit_asset(issuer_deposittable, from_fee);
+        add_deposit_asset(issuer_deposittable, out_fee);
 
         if(transfer) {
             eosio::action(permission_level(_self, name("active")),

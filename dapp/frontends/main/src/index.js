@@ -180,17 +180,21 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //     })
     // } catch(e){};
 
+    await detfdexHelper.getMarket('liquidwingsx', 1);
+
+    // await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0001 RETF', '', {
+    //     actor: 'liquidmarios',
+    //     permission: 'active',
+    // });
     // await detfdexHelper.convert('liquidwingsx', 'liquidmarios', 1, {
-    //     contract: 'eosio.token',
-    //     quantity: '1000.0000 USDT'
+    //     contract: 'liquidwingse',
+    //     quantity: '0.0001 RETF'
     // }, true);
 
     // await detfdexHelper.withdraw('liquidwingsx', 'liquidmarios', {
     //     contract: 'eosio.token',
     //     quantity: '0.0001 RETF'
     // })
-
-    await detfdexHelper.getMarket('liquidwingsx', 1);
 }
 
 init();

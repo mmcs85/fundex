@@ -100,6 +100,26 @@ export default function(eos, dappClient) {
         const auth = { actor: account, permission: 'active' }
         const result = await eos.transact({
             actions: [{
+                account: contract,
+                name: 'convert',
+                authorization: [auth],
+                data: {
+                    account,
+                    market_id,
+                    from,
+                    transfer
+                }
+            }]
+        }, {
+            blocksBehind: 3,
+            expireSeconds: 30,
+        });
+    },
+
+    convertBulk: async function(contract, account, market_id, from, transfer) {
+        const auth = { actor: account, permission: 'active' }
+        const result = await eos.transact({
+            actions: [{
                 account: from.contract,
                 name: 'transfer',
                 authorization: [auth],
