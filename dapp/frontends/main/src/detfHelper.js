@@ -173,14 +173,14 @@ export default function(eos, dappClient) {
         const data = await eos.rpc.get_table_rows({
             json: true,
             code,
-            scope: code,
+            scope: account,
             table: 'deposits'
         });
         return data.rows;
     },
-    getBalance: async function(code, account) {
+    getBalance: async function(code, account, symbolCode) {
         const service = await dappClient.service('ipfs', code);
-        const response = await service.get_vram_row(code, code, 'accounts', account );
+        const response = await service.get_vram_row(code, account, 'accounts', symbolCode );
         console.log(response);
         return response;
     }

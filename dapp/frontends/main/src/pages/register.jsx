@@ -1,5 +1,6 @@
+import { PrivateKey } from 'eosjs-ecc'
 import React, { Component } from 'react';
-
+import DetfdexHelper from './../detfdexHelper'
 
 import {
     Button,
@@ -31,13 +32,14 @@ class Register extends Component {
         let pass = [...Array(14)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
         this.state = {
             agreed: false,
-            pass
+            password: pass
         };
 
         this.agree = this.agree.bind(this)
         this.createAccount = this.createAccount.bind(this)
-    }
 
+        this.detfdexHelper = new DetfdexHelper(window.eos, window.dspClient);
+    }
 
     componentDidMount() {
     }
@@ -46,9 +48,11 @@ class Register extends Component {
         this.setState({...this.state, agreed: !this.state.agreed})
     }
 
-    createAccount() {
+    async createAccount() {
         // generated password = this.state.password
-        console.log("wow")
+        // const privKey = PrivateKey.fromSeed(this.state.password).toString()
+        // this.detfdexHelper.regaccount('liquidwingse', privKey, 'testing126');
+        //show account
     }
 
 

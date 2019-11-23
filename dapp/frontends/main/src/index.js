@@ -1,3 +1,4 @@
+import { PrivateKey } from 'eosjs-ecc'
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Index from './pages/index';
@@ -91,7 +92,8 @@ async function init () {
 //   await seedContractTokens(eosHelper);
 //   await seedAccounts(eosHelper);
 //   await seedDetfs(eosHelper, detfHelper);
-  await exchangeDetfs(eosHelper, detfdexHelper);
+  await exchangeDetfs(eosHelper, detfHelper, detfdexHelper);
+  await checkStates(eosHelper, detfHelper, detfdexHelper);
 }
 
 async function seedContractTokens(eosHelper) {
@@ -161,7 +163,7 @@ async function seedDetfs(eosHelper, detfHelper) {
     }
 }
 
-async function exchangeDetfs(eosHelper, detfdexHelper) {
+async function exchangeDetfs(eosHelper, detfHelper, detfdexHelper) {
     // try {
     //     await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0003 RETF', '', {
     //         actor: 'liquidmarios',
@@ -171,7 +173,7 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //         actor: 'liquidmarios',
     //         permission: 'active',
     //     });
-    //     await detfdexHelper.createMarket('liquidwingsx', 'liquidmarios', 1, 'Resources ETF/USDT', {
+    //     await detfdexHelper.createMarket('liquidwingsx', 'liquidmarios', 1, 5, 'Resources ETF/USDT', {
     //         contract: 'liquidwingse',
     //         quantity: '0.0003 RETF'
     //     }, {
@@ -179,8 +181,6 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //         quantity: '1000.0000 USDT'
     //     })
     // } catch(e){};
-
-    await detfdexHelper.getMarket('liquidwingsx', 1);
 
     // await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0001 RETF', '', {
     //     actor: 'liquidmarios',
@@ -195,6 +195,24 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //     contract: 'eosio.token',
     //     quantity: '0.0001 RETF'
     // })
+
+    const privKey = PrivateKey.fromSeed('12345').toString()
+    detfdexHelper.regaccount('liquidwingsx', privKey, 'testing111');
+
+    await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '1.0000 USDT', 'vaccount:testing111', {
+        actor: 'liquidmarios',
+        permission: 'active',
+    });
+
+
+
+}
+
+async function checkStates(eosHelper, detfHelper, detfdexHelper) {
+    await detfdexHelper.getMarket('liquidwingsx', 1);
+    await detfHelper.getBalance('liquidwingse', 'liquidmarios', 'RETF');
+    await detfHelper.getDeposits('liquidwingse', 'liquidmarios')
+    await detfdexHelper.getVaccDeposits('liquidwingsx', 'testing111')
 }
 
 init();
