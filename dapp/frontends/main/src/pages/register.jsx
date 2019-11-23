@@ -35,6 +35,7 @@ class Register extends Component {
         };
 
         this.agree = this.agree.bind(this)
+        this.createAccount = this.createAccount.bind(this)
     }
 
 
@@ -43,6 +44,11 @@ class Register extends Component {
 
     agree() {
         this.setState({...this.state, agreed: !this.state.agreed})
+    }
+
+    createAccount() {
+        // generated password = this.state.password
+        console.log("wow")
     }
 
 
@@ -58,7 +64,7 @@ class Register extends Component {
                 <br /><br />
                 <Checkbox onClick={this.agree} label={{ children: 'I have saved my password in a safe place.' }} />
                 <br /><br />
-                <Button size='large' disabled={!this.state.agreed} content="Let's Go" primary />
+                <Button size='large' onClick={this.createAccount} disabled={!this.state.agreed} content="Let's Go" primary />
 
             
             </div>
