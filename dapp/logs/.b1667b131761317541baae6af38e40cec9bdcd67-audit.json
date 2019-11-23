@@ -14,6 +14,11 @@
             "date": 1574431931416,
             "name": "logs/pprovider2-vcpu-dapp-service-node-2019-11-22.log",
             "hash": "6ac6e007227fc489fae3e48cf3304268"
+        },
+        {
+            "date": 1574467404875,
+            "name": "logs/pprovider2-vcpu-dapp-service-node-2019-11-23.log",
+            "hash": "ffeed6614e82063b5acc2812849e4715"
         }
     ]
 }

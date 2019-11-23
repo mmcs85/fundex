@@ -56,16 +56,16 @@ export default function(eos) {
             expireSeconds: 30,
         });
     },
-    transfer: async function(from, to, asset, memo, auth) {
+    transfer: async function(code, from, to, quantity, memo, auth) {
         const result = await eos.transact({
             actions: [{
-            account: asset.contract,
+            account: code,
             name: 'transfer',
             authorization: [auth],
                 data: {
                     from,
                     to,
-                    quantity: asset.quantity,
+                    quantity,
                     memo,
                 }
             }]
@@ -114,6 +114,18 @@ export default function(eos) {
             blocksBehind: 3,
             expireSeconds: 30,
         });
+    },
+    getTableRows: async function(code, scope, table, lower_bound, upper_bound, limit) {
+        const data = await eos.rpc.get_table_rows({
+            json: true,
+            code,
+            scope,
+            table,
+            lower_bound,
+            upper_bound,
+            limit
+        })
+        return data.rows
     }
   };
 }

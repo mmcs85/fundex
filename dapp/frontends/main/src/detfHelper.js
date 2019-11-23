@@ -69,8 +69,8 @@ export default function(eos, dappClient) {
         });
     },
 
-    issueDetfBulk: async function(contract, account, quantity, memo) {
-        const stat = await this.getDetfStat(contract, quantity.symbol);
+    issueDetfBulk: async function(contract, account, quantity, symbol, memo) {
+        const stat = await this.getDetfStat(contract, symbol);
         const auth = { actor: account, permission: 'active' };
         const actions = [];
         for(let unit of stat.basket_units) {

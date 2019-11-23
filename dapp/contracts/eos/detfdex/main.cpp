@@ -82,9 +82,7 @@ CONTRACT_START()
         uint64_t primary_key() const { return shard; }
     };
 
-    typedef dapp::multi_index<"deposits"_n, deposit> deposits;
-    typedef eosio::multi_index<".deposits"_n, deposit> deposits_v_abi;
-    typedef eosio::multi_index<"deposits"_n, shardbucket> deposits_abi;
+    typedef eosio::multi_index<"deposits"_n, deposit> deposits;
 
     typedef dapp::multi_index<"vdeposits"_n, deposit> vdeposits;
     typedef eosio::multi_index<".vdeposits"_n, deposit> vdeposits_v_abi;
@@ -326,11 +324,11 @@ CONTRACT_START()
         check(asset_amount >= amt_amount, "not enough funds for this asset");
 
         if(asset_amount == amt_amount) {
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            deposittable.modify(deposit_itr, _self, [&](auto &d) {
                 d.assetmap.erase(deposit_asset_itr);
             });
         } else {
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            deposittable.modify(deposit_itr, _self, [&](auto &d) {
                 d.assetmap[asset_key].quantity.amount -= amt_amount;
             });
         }
@@ -347,7 +345,7 @@ CONTRACT_START()
                 d.assetmap[asset_key] = amt;
             });
         } else {
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            deposittable.modify(deposit_itr, _self, [&](auto &d) {
                 const auto& deposit_asset_itr = d.assetmap.find(asset_key);
 
                 if(deposit_asset_itr == d.assetmap.end()) {
