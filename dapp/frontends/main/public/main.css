@@ -2,3 +2,15 @@ body {
     background: rgb(19,116,213);
 background: linear-gradient(180deg, rgba(19,116,213,1) 0%, rgba(19,116,213,0.6530987394957983) 100%);
 }
+
+h1 {
+    padding:0;
+}
+
+h2 {
+    margin:0.25em;
+}
+
+.foot { color:#bbb; }
+.foot a { color:#eee; }
+.foot a:hover { color:#eee; text-decoration:underline; }

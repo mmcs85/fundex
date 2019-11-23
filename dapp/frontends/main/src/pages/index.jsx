@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
+import { BrowserRouter, Route, Link } from "react-router-dom";
 
+// pages
+import home from './home'
+import register from './register'
+import login from './login'
 
 import {
     Button,
@@ -47,35 +52,20 @@ class Index extends Component {
                             Logo Here
       </Header>
                         <Form size='large'>
-                            <Segment stacked>
+                            <Segment padded stacked>
 
-                                <Grid columns={2} stackable textAlign='center'>
-                                    <Divider vertical>Or</Divider>
-
-                                    <Grid.Row verticalAlign='middle'>
-                                        <Grid.Column>
-                                            <Header icon>
-                                                <Icon name='search' />
-                                                Browse ETFs
-          </Header>
-
-                                            <Search placeholder='Enter ETF ticker...' />
-                                        </Grid.Column>
-
-                                        <Grid.Column>
-                                            <Header icon>
-                                                <Icon name='user' />
-                                                Create an account
-          </Header>
-                                            <Button primary>Sign up</Button>
-                                        </Grid.Column>
-                                    </Grid.Row>
-                                </Grid>
-
-
+                                <BrowserRouter>
+                                    <Route exact path='/' component={home}/>
+                                    <Route exact path='/go' component={register}/>
+                                    <Route exact path='/login' component={login}/>
+                                </BrowserRouter>
                             </Segment>
                             <br />
-                            &copy; 2019, Liquidwings
+
+                            <div class="foot">
+                                <a href="/">Home</a> | <a href="/go">Register</a> | <a href="/login">Login</a>
+                            </div>
+                            
                         </Form>
                     </Grid.Column>
                 </Grid>

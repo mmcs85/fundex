@@ -24,9 +24,11 @@
       "eos-transit-tokenpocket-provider": "^4.0.1",
       "eosjs": "^20.0.0",
       "eosjs-ecc": "^4.0.7",
+      "js-sha256": "^0.9.0",
       "react": "^16.12.0",
       "react-dom": "^16.12.0",
       "react-grid-layout": "^0.16.6",
+      "react-router-dom": "^5.1.2",
       "react-scripts": "^1.1.5",
       "scatterjs-core": "^2.7.18",
       "scatterjs-plugin-eosjs": "^1.5.1",
@@ -37,7 +39,6 @@
       "shards-react": "^1.0.3",
       "stream-buffers": "^3.0.2",
       "tronweb": "^2.8.0",
-      "js-sha256": "^0.9.0",
       "web3": "^1.2.4"
    },
    "devDependencies": {}
