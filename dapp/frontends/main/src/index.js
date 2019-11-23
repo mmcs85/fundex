@@ -91,7 +91,7 @@ async function init () {
 //   await seedContractTokens(eosHelper);
 //   await seedAccounts(eosHelper);
 //   await seedDetfs(eosHelper, detfHelper);
-  await exchangeDetfs(eosHelper, detfdexHelper);
+//   await exchangeDetfs(eosHelper, detfdexHelper);
 }
 
 async function seedContractTokens(eosHelper) {

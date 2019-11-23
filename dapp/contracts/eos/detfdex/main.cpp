@@ -151,13 +151,13 @@ CONTRACT_START()
         markettable.erase(market_itr);
 
         eosio::action(permission_level(_self, name("active")),
-            market->base.contract, name("transfer"),
-            std::make_tuple(_self, issuer, market->base.quantity, std::string("withdraw asset action")))
+            market_itr->base.contract, name("transfer"),
+            std::make_tuple(_self, issuer, market_itr->base.quantity, std::string("withdraw asset action")))
         .send();
 
         eosio::action(permission_level(_self, name("active")),
-            market->quote.contract, name("transfer"),
-            std::make_tuple(_self, issuer, market->quote.quantity, std::string("withdraw asset action")))
+            market_itr->quote.contract, name("transfer"),
+            std::make_tuple(_self, issuer, market_itr->quote.quantity, std::string("withdraw asset action")))
         .send();
     }
 
@@ -180,7 +180,9 @@ CONTRACT_START()
 
         check(market_itr->issuer == issuer, "only market creator is allowed to fund");
 
-        deposits deposittable(_self, account.value);
+        // TODO check if funding doesnt bias market price by a max % of slippage
+
+        deposits deposittable(_self, issuer.value);
 
         sub_deposit_asset(deposittable, base);
         sub_deposit_asset(deposittable, quote);
@@ -206,22 +208,23 @@ CONTRACT_START()
 
         markets markettable(_self, _self.value);
         auto market_itr = markettable.find(market_id);
+        auto market_fee = market_itr->fee;
 
+        auto from_fee = from.quantity * market_fee / FEE_PRECISION;
+        check(from_fee.amount >= 0, "order is to low to charge fee");
+        from.quantity -= from_fee;
+        
         extended_asset out = extended_asset();
-
-        auto from_fee = from.quantity * market.fee / FEE_PRECISION;
-        check(from_fee.quantity.amount >= 0, "order is to low to charge fee");
-
         markettable.modify(market_itr, _self, [&]( auto& m ) {
-            out = m.convert(from-from_fee);
+            out = m.convert(from);
         });
 
-        auto out_fee = out.quantity * market.fee / FEE_PRECISION;
-        check(out_fee.quantity.amount >= 0, "order is to low to charge fee");
+        auto out_fee = out.quantity * market_fee / FEE_PRECISION;
+        check(out_fee.amount >= 0, "order is to low to charge fee");
 
-        deposits issuer_deposittable(_self, market.issuer.value);
-        add_deposit_asset(issuer_deposittable, from_fee);
-        add_deposit_asset(issuer_deposittable, out_fee);
+        deposits issuer_deposittable(_self, market_itr->issuer.value);
+        add_deposit_asset(issuer_deposittable, extended_asset(from_fee, from.contract));
+        add_deposit_asset(issuer_deposittable, extended_asset(out_fee, out.contract));
 
         if(transfer) {
             eosio::action(permission_level(_self, name("active")),
@@ -254,12 +257,23 @@ CONTRACT_START()
 
         markets markettable(_self, _self.value);
         auto market_itr = markettable.find(payload.market_id);
+        auto market_fee = market_itr->fee;
+
+        auto from_fee = payload.from.quantity * market_fee / FEE_PRECISION;
+        check(from_fee.amount >= 0, "order is to low to charge fee");
+        payload.from.quantity -= from_fee;
 
         extended_asset out = extended_asset();
-
         markettable.modify(market_itr, _self, [&]( auto& m ) {
             out = m.convert(payload.from);
         });
+
+        auto out_fee = out.quantity * market_fee / FEE_PRECISION;
+        check(out_fee.amount >= 0, "order is to low to charge fee");
+
+        deposits issuer_deposittable(_self, market_itr->issuer.value);
+        add_deposit_asset(issuer_deposittable, extended_asset(from_fee, payload.from.contract));
+        add_deposit_asset(issuer_deposittable, extended_asset(out_fee, out.contract));
 
         add_deposit_asset(vdeposittable, out);
     }
@@ -392,4 +406,4 @@ CONTRACT_START()
 
     VACCOUNTS_APPLY(((action_vconvert)(vconvert))((action_vwithdraw)(vwithdraw)))
 };
-EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(convert)(withdraw)(regaccount))
+EOSIO_DISPATCH_SVC_TRX(CONTRACT_NAME(), (create)(retire)(fund)(convert)(withdraw)(regaccount))

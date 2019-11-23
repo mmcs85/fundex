@@ -20,7 +20,7 @@ export default function(eos, dappClient) {
     //         quantity: '1.0000 USDT'
     //     }
     // }
-    createMarket: async function(contract, issuer, market_id, name, initial_base, initial_quote) {
+    createMarket: async function(contract, issuer, market_id, fee, name, initial_base, initial_quote) {
         const result = await eos.transact({
             actions: [{
                 account: contract,
@@ -33,6 +33,7 @@ export default function(eos, dappClient) {
                 data: {
                     issuer,
                     market_id,
+                    fee,
                     name,
                     initial_base,
                     initial_quote
@@ -43,7 +44,7 @@ export default function(eos, dappClient) {
             expireSeconds: 30,
         });
     },
-    createMarketBulk: async function(contract, issuer, market_id, name, initial_base, initial_quote) {
+    createMarketBulk: async function(contract, issuer, market_id, fee, name, initial_base, initial_quote) {
         const auth = { actor: issuer, permission: 'active' };
         const result = await eos.transact({
             actions: [{
@@ -73,6 +74,7 @@ export default function(eos, dappClient) {
                 data: {
                     issuer,
                     market_id,
+                    fee,
                     name,
                     initial_base,
                     initial_quote
@@ -83,6 +85,50 @@ export default function(eos, dappClient) {
             expireSeconds: 30,
         });
     },
+    // retire(const name& issuer,
+    //        uint64_t market_id)
+    retire: async function(contract, issuer, market_id) {
+        const auth = { actor: issuer, permission: 'active' }
+        const result = await eos.transact({
+            actions: [{
+                account: contract,
+                name: 'retire',
+                authorization: [auth],
+                data: {
+                    issuer,
+                    market_id,
+                }
+            }]
+        }, {
+            blocksBehind: 3,
+            expireSeconds: 30,
+        });
+    },
+
+    // fund(const name& issuer,
+    //     uint64_t market_id,
+    //     extended_asset& base,
+    //     extended_asset& quote)
+    fund: async function(contract, issuer, market_id, base, quote) {
+        const auth = { actor: issuer, permission: 'active' }
+        const result = await eos.transact({
+            actions: [{
+                account: contract,
+                name: 'fund',
+                authorization: [auth],
+                data: {
+                    issuer,
+                    market_id,
+                    base,
+                    quote
+                }
+            }]
+        }, {
+            blocksBehind: 3,
+            expireSeconds: 30,
+        });
+    },
+
     // convert(name account,
     // 	    uint64_t market_id,
     // 	    extended_asset& from,
