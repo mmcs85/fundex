@@ -14,20 +14,6 @@ import DetfdexHelper from './detfdexHelper'
 
 ScatterJS.plugins(new ScatterEOS())
 
-// eosio endpoint
-// var debug = false;
-// var endpoint = "https://api.eosrio.io";
-// if(debug)
-//   endpoint = "http://54.186.222.85:8888";
-
-// if(window.location.host ===  "heartbeat.liquideos.com"){
-//   endpoint = "http://api.eosrio.io";
-// }
-
-// if(window.location.host === "jungle-heartbeat.liquideos.com"){
-//   endpoint = "http://dev.cryptolions.io:38888";
-// }
-
 let network = {
   blockchain: 'eos',
   protocol: 'https',
@@ -47,14 +33,14 @@ if (jungle) {
 if (local) {
   network.chainId = 'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f';
   network.port = 443;
-  network.host = '13015-de82ebec-941c-4022-9e70-3175509c7335.ws-eu01.gitpod.io';
+  network.host = '13015-c2906f2a-6ebe-4018-a20b-790d7313b95b.ws-eu01.gitpod.io';
   network.protocol = 'https';
 }
 
 const defaultPrivateKey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
 const defaultPubKey = "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV";
 
-const defaultEosiotokenPrivateKey = "5KQ6xUapUfEEUJouGCDqwbcQVHygYqkJS8ZcHG1Dt6CckCgDoAK"
+const defaultEosiotokenPrivateKey = "5JbBUdKSA2VjAkR56kaPAKq7GeW2Pnm72om5y88oYWP5wSqi6Rq"
 
 network = ScatterJS.Network.fromJson(network)
 
@@ -118,7 +104,7 @@ async function seedContractTokens(eosHelper) {
 }
 
 async function seedAccounts(eosHelper) {
-    const accounts = ['liquidmarios', 'liquidzachal', 'liquidpeters', 'liquidwingsx', 'liquidwingse'];
+    const accounts = ['liquidmarios', 'liquidzachal', 'liquidpeters'];
     const tokens = ['SYS', 'EOS', 'DAPP', 'ETH', 'BTC', 'GOLD', 'USDT', 'USDC'];
 
     for(let acc of accounts) {
@@ -129,7 +115,7 @@ async function seedAccounts(eosHelper) {
 
     for(let acc of accounts) {
         for(let token of tokens) {
-            await eosHelper.issueToken('eosio', acc, `1000.0000 ${token}`, 'give funds');
+            await eosHelper.issueToken('eosio', acc, `100000.0000 ${token}`, 'give funds');
         }
     }
 }
@@ -168,22 +154,20 @@ async function seedDetfs(eosHelper, detfHelper) {
         }], '1000000000.0000 SCETF');
     } catch(e){};
 
-    await detfHelper.issueDetfBulk('liquidwingse', 'liquidmarios', '0.0010 RETF', 'RETF', 'get some shares');
-    await detfHelper.issueDetfBulk('liquidwingse', 'liquidzachal', '0.0010 SVETF', 'SVETF', 'get some shares');
-    await detfHelper.issueDetfBulk('liquidwingse', 'liquidpeters', '0.0010 SCETF', 'SCETF', 'get some shares');
+    for(let i = 0; i<10; i++) {
+        await detfHelper.issueDetfBulk('liquidwingse', 'liquidmarios', '0.0001 RETF', 'RETF', 'get some shares');
+        await detfHelper.issueDetfBulk('liquidwingse', 'liquidzachal', '0.0001 SVETF', 'SVETF', 'get some shares');
+        await detfHelper.issueDetfBulk('liquidwingse', 'liquidpeters', '0.0001 SCETF', 'SCETF', 'get some shares');
+    }
 }
 
 async function exchangeDetfs(eosHelper, detfdexHelper) {
-    await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidzachal', '0.0003 RETF', 'friend donation', {
-        actor: 'liquidmarios',
-        permission: 'active',
-    });
     // try {
-    //     await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0003 RETF', 'deposit asset', {
+    //     await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0003 RETF', '', {
     //         actor: 'liquidmarios',
     //         permission: 'active',
     //     });
-    //     await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingsx', '1000.0000 USDT', 'deposit asset', {
+    //     await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingsx', '1000.0000 USDT', '', {
     //         actor: 'liquidmarios',
     //         permission: 'active',
     //     });
@@ -196,7 +180,17 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //     })
     // } catch(e){};
 
-    
+    // await detfdexHelper.convert('liquidwingsx', 'liquidmarios', 1, {
+    //     contract: 'eosio.token',
+    //     quantity: '1000.0000 USDT'
+    // }, true);
+
+    // await detfdexHelper.withdraw('liquidwingsx', 'liquidmarios', {
+    //     contract: 'eosio.token',
+    //     quantity: '0.0001 RETF'
+    // })
+
+    await detfdexHelper.getMarket('liquidwingsx', 1);
 }
 
 init();

@@ -6,6 +6,7 @@
 #define DAPPSERVICE_ACTIONS_COMMANDS() \
   IPFS_SVC_COMMANDS()
 #define CONTRACT_NAME() detf
+#define DELAYED_CLEANUP 60
 using std::string;
 
 CONTRACT_START()
@@ -94,21 +95,22 @@ CONTRACT_START()
             auto deposit_itr = deposittable.find(unit.contract.value);
             auto unit_symcode_raw = unit.quantity.symbol.code().raw();
             const auto& deposit_asset_itr = deposit_itr->assetmap.find(unit_symcode_raw);
+            const auto asset_contract_name = unit.contract.to_string();
+            const auto asset_quantity_symbol = unit.quantity.symbol.code().to_string();
 
-            check(deposit_asset_itr != deposit_itr->assetmap.end(), "required a deposit of the asset");
+            check(deposit_asset_itr != deposit_itr->assetmap.end(), "deposit required for asset: " + asset_contract_name + " symbol: " + asset_quantity_symbol);
 
-            auto& deposit_asset = deposit_asset_itr->second;
-            auto asset_amount = deposit_asset.amount;
+            auto asset_amount = deposit_asset_itr->second.amount;
             auto amt_amount = unit.quantity.amount * quantity.amount;
 
-            check(asset_amount >= amt_amount, "not enough funds for this asset");
+            check(asset_amount >= amt_amount, "not enough funds for asset: " + asset_contract_name + " symbol: " + asset_quantity_symbol );
 
             if(asset_amount == amt_amount) {
-                deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                deposittable.modify(deposit_itr, _self, [&](auto &d) {
                     d.assetmap.erase(unit_symcode_raw);
                 });
             } else {
-                deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                deposittable.modify(deposit_itr, _self, [&](auto &d) {
                     d.assetmap[unit_symcode_raw].amount -= amt_amount;
                 });
             }
@@ -145,11 +147,11 @@ CONTRACT_START()
         sub_balance( account, quantity );
 
         for ( auto const& unit: st.basket_units ) {
-            auto units_amount = unit.quantity.amount * quantity.amount;
+            auto units_amount = asset(unit.quantity.amount * quantity.amount, unit.quantity.symbol);
 
             eosio::action(permission_level(_self, name("active")),
                   unit.contract, name("transfer"),
-                  std::make_tuple(_self, account, units_amount, "withdraw asset action"))
+                  std::make_tuple(_self, account, units_amount, std::string("withdraw asset action")))
             .send();
         }
       }
@@ -196,7 +198,7 @@ CONTRACT_START()
 
             deposits deposittable(_self, from.value);
             auto new_deposit_asset = extended_asset(quantity, _first_receiver);
-            add_deposit_asset(deposittable, from, new_deposit_asset);
+            add_deposit_asset(deposittable, new_deposit_asset);
         }
     }
 
@@ -209,18 +211,18 @@ CONTRACT_START()
         check( amount.quantity.symbol.is_valid(), "invalid symbol name" );
         check( amount.quantity.amount > 0, "must be a positive quantity" );
 
-        sub_deposit_asset(deposittable, account, amount);
+        sub_deposit_asset(deposittable, amount);
 
         eosio::action(permission_level(_self, name("active")),
                 amount.contract, name("transfer"),
-                std::make_tuple(_self, account, amount.quantity.amount, "withdraw asset action"))
+                std::make_tuple(_self, account, amount.quantity, std::string("withdraw asset action")))
         .send();
 
         // } else {
         //     for ( auto const& asset: deposit.assetmap ) {
         //         eosio::action(permission_level(_self, name("active")),
         //                 asset.second.contract, name("transfer"),
-        //                 std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
+        //                 std::make_tuple(_self, account, asset.second.quantity.amount, std::string("withdraw asset action")))
         //         .send();
         //     }
 
@@ -233,7 +235,7 @@ CONTRACT_START()
    private:
     
     template<typename T>
-    void sub_deposit_asset(T& deposittable, name account, const extended_asset& amt) 
+    void sub_deposit_asset(T& deposittable, const extended_asset& amt) 
     {
         auto deposit_itr = deposittable.find(amt.contract.value);
         auto asset_symcode_raw = amt.quantity.symbol.code().raw();
@@ -259,7 +261,7 @@ CONTRACT_START()
     }
 
     template<typename T>
-    void add_deposit_asset(T& deposittable, name account, const extended_asset& amt) {
+    void add_deposit_asset(T& deposittable, const extended_asset& amt) {
         auto deposit_itr = deposittable.find(amt.contract.value);
         auto asset_symcode_raw = amt.quantity.symbol.code().raw();
 
@@ -282,19 +284,19 @@ CONTRACT_START()
     }
 
     void sub_balance( const name& owner, const asset& value ) {
-        accounts from_acnts( get_self(), owner.value );
+        accounts from_acnts( _self, owner.value, 1024, 64, false, false, DELAYED_CLEANUP);
 
         const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
         check( from.balance.amount >= value.amount, "overdrawn balance" );
 
         from_acnts.modify( from, owner, [&]( auto& a ) {
-                a.balance -= value;
-            });
+            a.balance -= value;
+        });
     }
 
     void add_balance( const name& owner, const asset& value, const name& ram_payer )
     {
-        accounts to_acnts( get_self(), owner.value );
+        accounts to_acnts( _self, owner.value, 1024, 64, false, false, DELAYED_CLEANUP);
         auto to = to_acnts.find( value.symbol.code().raw() );
         if( to == to_acnts.end() ) {
             to_acnts.emplace( ram_payer, [&]( auto& a ){

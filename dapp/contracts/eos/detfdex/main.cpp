@@ -8,7 +8,14 @@
 #define DAPPSERVICE_ACTIONS_COMMANDS() \
   IPFS_SVC_COMMANDS()VACCOUNTS_SVC_COMMANDS()
 #define CONTRACT_NAME() detfdex
+#define DELAYED_CLEANUP 60
 using std::string;
+
+std::string extended_asset_to_string(const extended_asset& asset) {
+    if(!asset.contract)
+        return std::string();
+    return std::string("'" + asset.contract.to_string() + ", " + asset.quantity.symbol.code().to_string() + "'");
+}
 
 CONTRACT_START()
 
@@ -30,11 +37,12 @@ CONTRACT_START()
 
         uint64_t primary_key() const { return id; }
 
-        extended_asset convert(const extended_asset from)
+        extended_asset convert(const extended_asset& from)
         {
             check(from.quantity.amount > 0, "Quantity must be greater than zero");
             extended_asset out = extended_asset();
-            if (from.quantity.symbol == base.quantity.symbol)
+            if (from.contract == base.contract &&
+                from.quantity.symbol == base.quantity.symbol)
             {
                 out.contract = quote.contract;
                 out.quantity.symbol = quote.quantity.symbol;
@@ -42,7 +50,8 @@ CONTRACT_START()
                 base += from;
                 quote -= out;
             }
-            else if (from.quantity.symbol == quote.quantity.symbol)
+            else if (from.contract == quote.contract &&
+                     from.quantity.symbol == quote.quantity.symbol)
             {
                 out.contract = base.contract;
                 out.quantity.symbol = base.quantity.symbol;
@@ -52,8 +61,13 @@ CONTRACT_START()
             }
             else
             {
-                check(false, "Invalid conversion");
+                check(false, "Invalid conversion, base: "  + extended_asset_to_string(base) + 
+                                                " quote: " + extended_asset_to_string(quote) + 
+                                                " from: "  + extended_asset_to_string(from));
             }
+
+            check(out.quantity.amount > 0, "converted asset: " + extended_asset_to_string(out) + " must be positive");
+
             return out;
         }
 
@@ -106,10 +120,10 @@ CONTRACT_START()
 
         deposits deposittable(_self, issuer.value);
 
-        sub_deposit_asset(deposittable, issuer, initial_base);
-        sub_deposit_asset(deposittable, issuer, initial_quote);
+        sub_deposit_asset(deposittable, initial_base);
+        sub_deposit_asset(deposittable, initial_quote);
 
-        markets markettable(_self, _self.value);
+        markets markettable(_self, _self.value, 1024, 64, false, false, DELAYED_CLEANUP);
 
         markettable.emplace(_self, [&]( auto& m ) {
             m.id = market_id;
@@ -131,23 +145,24 @@ CONTRACT_START()
         require_auth(account);
 
         deposits deposittable(_self, account.value);
-        sub_deposit_asset(deposittable, account, from);
+        sub_deposit_asset(deposittable, from);
 
         markets markettable(_self, _self.value);
+        auto market_itr = markettable.find(market_id);
 
         extended_asset out = extended_asset();
 
-        markettable.emplace(_self, [&]( auto& m ) {
+        markettable.modify(market_itr, _self, [&]( auto& m ) {
             out = m.convert(from);
         });
 
         if(transfer) {
             eosio::action(permission_level(_self, name("active")),
                   out.contract, name("transfer"),
-                  std::make_tuple(_self, account, out.quantity.amount, "withdraw asset action"))
+                  std::make_tuple(_self, account, out.quantity, std::string("withdraw asset action")))
             .send();
         } else {
-            add_deposit_asset(deposittable, account, out);
+            add_deposit_asset(deposittable, out);
         }
     }
 
@@ -168,17 +183,18 @@ CONTRACT_START()
 
         vdeposits vdeposittable(_self, payload.vaccount.value);
 
-        sub_deposit_asset(vdeposittable, payload.vaccount, payload.from);
+        sub_deposit_asset(vdeposittable, payload.from);
 
         markets markettable(_self, _self.value);
+        auto market_itr = markettable.find(payload.market_id);
 
         extended_asset out = extended_asset();
 
-        markettable.emplace(_self, [&]( auto& m ) {
+        markettable.modify(market_itr, _self, [&]( auto& m ) {
             out = m.convert(payload.from);
         });
 
-        add_deposit_asset(vdeposittable, payload.vaccount, out);
+        add_deposit_asset(vdeposittable, out);
     }
 
     //Handle deposit transfers only
@@ -206,10 +222,10 @@ CONTRACT_START()
           name to_act = name(memo.c_str());
           check(is_account(to_act), "The account name supplied is not valid");          
           vdeposits deposittable(_self, to_act.value);
-          add_deposit_asset(deposittable, to_act, new_deposit_asset);
+          add_deposit_asset(deposittable, new_deposit_asset);
         } else {
-          deposits deposittable(_self, to.value);
-          add_deposit_asset(deposittable, to, new_deposit_asset);
+          deposits deposittable(_self, from.value);
+          add_deposit_asset(deposittable, new_deposit_asset);
         }
     }
 
@@ -222,11 +238,11 @@ CONTRACT_START()
         check( amount.quantity.symbol.is_valid(), "invalid symbol name" );
         check( amount.quantity.amount > 0, "must be a positive quantity" );
 
-        sub_deposit_asset(deposittable, account, amount);
+        sub_deposit_asset(deposittable, amount);
 
         eosio::action(permission_level(_self, name("active")),
                 amount.contract, name("transfer"),
-                std::make_tuple(_self, account, amount.quantity.amount, "withdraw asset action"))
+                std::make_tuple(_self, account, amount.quantity, std::string("withdraw asset action")))
         .send();
     }
 
@@ -248,7 +264,7 @@ CONTRACT_START()
         check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
         check( wamount.quantity.amount > 0, "must be a positive quantity" );
 
-        sub_deposit_asset(vdeposittable, payload.vaccount, wamount);
+        sub_deposit_asset(vdeposittable, wamount);
 
         eosio::action(permission_level(_self, name("active")),
                 wamount.contract, name("transfer"),
@@ -259,7 +275,7 @@ CONTRACT_START()
    private:
 
     template<typename T>
-    void sub_deposit_asset(T& deposittable, name account, const extended_asset& amt) 
+    void sub_deposit_asset(T& deposittable, const extended_asset& amt) 
     {
         auto deposit_itr = deposittable.find(amt.contract.value);
         auto asset_symcode_raw = amt.quantity.symbol.code().raw();
@@ -274,18 +290,18 @@ CONTRACT_START()
         check(asset_amount >= amt_amount, "not enough funds for this asset");
 
         if(asset_amount == amt_amount) {
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            deposittable.modify(deposit_itr, _self, [&](auto &d) {
                 d.assetmap.erase(deposit_asset_itr);
             });
         } else {
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+            deposittable.modify(deposit_itr, _self, [&](auto &d) {
                 d.assetmap[asset_symcode_raw].amount -= amt_amount;
             });
         }
     }
 
     template<typename T>
-    void add_deposit_asset(T& deposittable, name account, const extended_asset& amt) {
+    void add_deposit_asset(T& deposittable, const extended_asset& amt) {
         auto deposit_itr = deposittable.find(amt.contract.value);
         auto asset_symcode_raw = amt.quantity.symbol.code().raw();
 

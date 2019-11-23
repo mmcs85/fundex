@@ -3,9 +3,11 @@
 export DSP_ENDPOINT=http://localhost:13015/
 export LOCAL_TEST_ACCOUNT=liquidwingsx
 export LOCAL_TEST_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-# Buy RAM:
-echo Buy RAM
-cleos -u $DSP_ENDPOINT system buyram $LOCAL_TEST_ACCOUNT $LOCAL_TEST_ACCOUNT "200.0000 SYS" -p $LOCAL_TEST_ACCOUNT@active
+
+# create account
+echo create account
+cleos -u $DSP_ENDPOINT system newaccount eosio $LOCAL_TEST_ACCOUNT $LOCAL_TEST_PUBLIC_KEY $LOCAL_TEST_PUBLIC_KEY --stake-cpu "10.0000 SYS" --stake-net "10.0000 SYS" --buy-ram "200.0000 SYS"
+
 # Set contract code and abi
 echo Set contract code and abi
 cleos -u $DSP_ENDPOINT set contract $LOCAL_TEST_ACCOUNT ../detfdex -p $LOCAL_TEST_ACCOUNT@active

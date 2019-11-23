@@ -54,7 +54,7 @@ export default function(eos, dappClient) {
                     from: issuer,
                     to: contract,
                     quantity: initial_base.quantity,
-                    memo: 'deposit asset',
+                    memo: '',
                 }
             }, {
                 account: initial_quote.contract,
@@ -64,16 +64,12 @@ export default function(eos, dappClient) {
                     from: issuer,
                     to: contract,
                     quantity: initial_quote.quantity,
-                    memo: 'deposit asset',
+                    memo: '',
                 }
             }, {
                 account: contract,
                 name: 'create',
-                authorization: [
-                {
-                    actor: 'eosio',
-                    permission: 'active'
-                }],
+                authorization: [auth],
                 data: {
                     issuer,
                     market_id,
@@ -111,13 +107,14 @@ export default function(eos, dappClient) {
                     from: account,
                     to: contract,
                     quantity: from.quantity,
-                    memo: 'deposit asset',
+                    memo: '',
                 }
             }, {
                 account: contract,
                 name: 'convert',
                 authorization: [auth],
                 data: {
+                    account,
                     market_id,
                     from,
                     transfer
@@ -130,7 +127,7 @@ export default function(eos, dappClient) {
     },
 
     // withdraw(name account, 
-    //          std::optional<extended_asset> amount)
+    //          extended_asset amount)
     withdraw: async function(contract, account, amount) {
         const result = await eos.transact({
             actions: [{
@@ -200,6 +197,13 @@ export default function(eos, dappClient) {
                 amount
             }
         );
+    },
+
+    getMarket: async function(code, id) {
+        const service = await dappClient.service('ipfs', code);
+        const response = await service.get_vram_row(code, code, 'markets', id );
+        console.log(response);
+        return response;
     }
   };
 }

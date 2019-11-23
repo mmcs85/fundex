@@ -62,7 +62,7 @@ class Index extends Component {
                             </Segment>
                             <br />
 
-                            <div class="foot">
+                            <div className="foot">
                                 <a href="/">Home</a> | <a href="/go">Register</a> | <a href="/login">Login</a>
                             </div>
                             
