@@ -300,14 +300,27 @@ CONTRACT_START()
         auto new_deposit_asset = extended_asset(quantity, _first_receiver);
 
         if (memo.size() > 0) {
-          name to_act = name(memo.c_str());
-          check(is_account(to_act), "The account name supplied is not valid");          
-          vdeposits deposittable(_self, to_act.value);
-          add_deposit_asset(deposittable, new_deposit_asset);
-        } else {
-          deposits deposittable(_self, from.value);
-          add_deposit_asset(deposittable, new_deposit_asset);
+          char* memocopy = strdup(memo.c_str());
+          char* token = strtok(memocopy, ":");
+          if(std::string(token) == "vaccount") {
+            name to_act;
+            token = strtok(NULL, ":");
+            if(token != NULL) {
+                to_act = name(dapp::stoull(token));
+            }
+            else {
+                check( false, "vaccount not found" );
+            }
+
+            check(is_account(to_act), "The account name supplied is not valid");          
+            vdeposits deposittable(_self, to_act.value);
+            add_deposit_asset(deposittable, new_deposit_asset);
+            return;
+          }
         }
+
+        deposits deposittable(_self, from.value);
+        add_deposit_asset(deposittable, new_deposit_asset);
     }
 
     [[eosio::action]] void withdraw(name account, extended_asset amount)
