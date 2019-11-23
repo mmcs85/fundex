@@ -4,7 +4,10 @@ import { BrowserRouter, Route, Link } from "react-router-dom";
 // pages
 import home from './home'
 import register from './register'
+import created from './created'
 import login from './login'
+import dash from './dashboard/dashboard'
+import convert from './dashboard/convert'
 
 import {
     Button,
@@ -51,12 +54,15 @@ class Index extends Component {
                     <Grid.Column style={{ maxWidth: 500 }}>
 
                         <Form size='large'>
-                            <Segment padded stacked>
+                            <Segment padded stacked style={{textAlign:'left'}}>
 
                                 <BrowserRouter>
                                     <Route exact path='/' component={home}/>
                                     <Route exact path='/go' component={register}/>
+                                    <Route exact path='/created' component={created}/>
                                     <Route exact path='/login' component={login}/>
+                                    <Route exact path='/dash' component={dash}/>
+                                    <Route exact path='/dash/convert' component={convert}/>
                                 </BrowserRouter>
                             </Segment>
                             <br />
