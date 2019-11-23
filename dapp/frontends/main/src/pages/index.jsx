@@ -43,14 +43,13 @@ class Index extends Component {
     render() {
 
         return (
+
             <div>
+                <img src="/images/logo.png" style={{maxWidth: '200px', marginLeft:'1em'}} />
 
-
-                <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
+                <Grid textAlign='center' style={{ height: '90vh' }} verticalAlign='middle'>
                     <Grid.Column style={{ maxWidth: 500 }}>
-                        <Header as='h2' style={{ color: 'white' }} textAlign='center'>
-                            Logo Here
-      </Header>
+
                         <Form size='large'>
                             <Segment padded stacked>
 
