@@ -46,6 +46,9 @@ class Convert extends Component {
     }
 
 
+    callConvert() {
+        // @ mario - make call to convert funds... (I will fill in variables)
+    }
 
     renderConvert() {
         return (

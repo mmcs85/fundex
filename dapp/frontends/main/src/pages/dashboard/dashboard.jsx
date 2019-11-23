@@ -37,7 +37,7 @@ class Dashboard extends Component {
     }
 
     getFunds() {
-        // @mario, data for funds user has.
+        // @mario - store data for funds user has in any variable here...
     }
 
     renderFunds() {
