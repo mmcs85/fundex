@@ -91,7 +91,8 @@ async function init () {
 //   await seedContractTokens(eosHelper);
 //   await seedAccounts(eosHelper);
 //   await seedDetfs(eosHelper, detfHelper);
-//   await exchangeDetfs(eosHelper, detfdexHelper);
+  await exchangeDetfs(eosHelper, detfHelper, detfdexHelper);
+  await checkStates(eosHelper, detfHelper, detfdexHelper);
 }
 
 async function seedContractTokens(eosHelper) {
@@ -161,7 +162,17 @@ async function seedDetfs(eosHelper, detfHelper) {
     }
 }
 
-async function exchangeDetfs(eosHelper, detfdexHelper) {
+async function exchangeDetfs(eosHelper, detfHelper, detfdexHelper) {
+    await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0001 RETF', '', {
+        actor: 'liquidmarios',
+        permission: 'active',
+    });
+
+    await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingse', '0.0001 USDT', '', {
+        actor: 'liquidmarios',
+        permission: 'active',
+    });
+
     // try {
     //     await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0003 RETF', '', {
     //         actor: 'liquidmarios',
@@ -171,7 +182,7 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //         actor: 'liquidmarios',
     //         permission: 'active',
     //     });
-    //     await detfdexHelper.createMarket('liquidwingsx', 'liquidmarios', 1, 'Resources ETF/USDT', {
+    //     await detfdexHelper.createMarket('liquidwingsx', 'liquidmarios', 1, 5, 'Resources ETF/USDT', {
     //         contract: 'liquidwingse',
     //         quantity: '0.0003 RETF'
     //     }, {
@@ -179,8 +190,6 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //         quantity: '1000.0000 USDT'
     //     })
     // } catch(e){};
-
-    await detfdexHelper.getMarket('liquidwingsx', 1);
 
     // await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0001 RETF', '', {
     //     actor: 'liquidmarios',
@@ -195,6 +204,13 @@ async function exchangeDetfs(eosHelper, detfdexHelper) {
     //     contract: 'eosio.token',
     //     quantity: '0.0001 RETF'
     // })
+}
+
+async function checkStates(eosHelper, detfHelper, detfdexHelper) {
+    await detfdexHelper.getMarket('liquidwingsx', 1);
+    await detfHelper.getBalance('liquidwingse', 'liquidmarios', 'RETF');
+    await detfHelper.getDeposits('liquidwingse', 'liquidmarios')
+    await detfdexHelper.getDeposits('liquidwingse', 'liquidmarios')
 }
 
 init();

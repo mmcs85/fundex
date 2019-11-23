@@ -270,7 +270,17 @@ export default function(eos, dappClient) {
         const response = await service.get_vram_row(code, code, 'markets', id );
         console.log(response);
         return response;
-    }
+    },
+
+    getDeposits: async function(code, account) {
+        const data = await eos.rpc.get_table_rows({
+            json: true,
+            code,
+            scope: account,
+            table: 'deposits'
+        });
+        return data.rows;
+    },
   };
 }
 
