@@ -1,3 +1,4 @@
+import { PrivateKey } from 'eosjs-ecc'
 import React, { Component } from 'react';
 import DetfdexHelper from './../detfdexHelper'
 
@@ -49,7 +50,9 @@ class Register extends Component {
 
     async createAccount() {
         // generated password = this.state.password
-        this.detfdexHelper.regaccount('liquidwingse', this.state.password, 'testing126');
+        // const privKey = PrivateKey.fromSeed(this.state.password).toString()
+        // this.detfdexHelper.regaccount('liquidwingse', privKey, 'testing126');
+        //show account
     }
 
 

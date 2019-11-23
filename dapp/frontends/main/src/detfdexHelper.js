@@ -281,6 +281,17 @@ export default function(eos, dappClient) {
         });
         return data.rows;
     },
+
+    getVaccDeposits: async function(code, account) {
+        const data = await eos.rpc.get_table_rows({
+            json: true,
+            code,
+            scope: account,
+            table: 'vdeposits'
+        });
+        return data.rows;
+    }
+
   };
 }
 
