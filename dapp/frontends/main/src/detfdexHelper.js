@@ -27,7 +27,7 @@ export default function(eos, dappClient) {
                 name: 'create',
                 authorization: [
                 {
-                    actor: 'eosio',
+                    actor: issuer,
                     permission: 'active'
                 }],
                 data: {

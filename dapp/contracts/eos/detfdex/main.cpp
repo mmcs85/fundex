@@ -14,10 +14,10 @@ CONTRACT_START()
 
     TABLE deposit
     {
-        name account;
-        std::map<std::pair<uint64_t, uint64_t>, extended_asset> assetmap;
+        name contract;
+        std::map<uint64_t, asset> assetmap;
 
-        uint64_t primary_key() const { return account.value; }
+        uint64_t primary_key() const { return contract.value; }
     };
 
     TABLE market
@@ -83,10 +83,7 @@ CONTRACT_START()
     };
 
     typedef eosio::multi_index<"deposits"_n, deposit> deposits;
-
-    typedef dapp::multi_index<"vdeposits"_n, deposit> vdeposits;
-    typedef eosio::multi_index<".vdeposits"_n, deposit> vdeposits_v_abi;
-    typedef eosio::multi_index<"vdeposits"_n, shardbucket> vdeposits_abi;
+    typedef eosio::multi_index<"vdeposits"_n, deposit> vdeposits;
 
     typedef dapp::multi_index<"markets"_n, market> markets;
     typedef eosio::multi_index<".markets"_n, market> markets_v_abi;
@@ -105,12 +102,9 @@ CONTRACT_START()
         check( initial_base.quantity.symbol.precision() == initial_quote.quantity.symbol.precision(),
          "initial base precision must match initial quote precision");
 
-        require_auth(_self);
+        require_auth(issuer);
 
-        deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(issuer.value);
-
-        check(deposit_itr != deposittable.end(), "A deposit must exist");
+        deposits deposittable(_self, issuer.value);
 
         sub_deposit_asset(deposittable, issuer, initial_base);
         sub_deposit_asset(deposittable, issuer, initial_quote);
@@ -136,11 +130,7 @@ CONTRACT_START()
 
         require_auth(account);
 
-        deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(account.value);
-
-        check(deposit_itr != deposittable.end(), "A deposit must exist");
-
+        deposits deposittable(_self, account.value);
         sub_deposit_asset(deposittable, account, from);
 
         markets markettable(_self, _self.value);
@@ -176,10 +166,7 @@ CONTRACT_START()
 
         require_vaccount(payload.vaccount);
 
-        vdeposits vdeposittable(_self, _self.value);
-        auto deposit_itr = vdeposittable.find(payload.vaccount.value);
-
-        check(deposit_itr != vdeposittable.end(), "A deposit must exist");
+        vdeposits vdeposittable(_self, payload.vaccount.value);
 
         sub_deposit_asset(vdeposittable, payload.vaccount, payload.from);
 
@@ -218,54 +205,35 @@ CONTRACT_START()
         if (memo.size() > 0) {
           name to_act = name(memo.c_str());
           check(is_account(to_act), "The account name supplied is not valid");          
-          vdeposits deposittable(_self, _self.value);
+          vdeposits deposittable(_self, to_act.value);
           add_deposit_asset(deposittable, to_act, new_deposit_asset);
         } else {
-          deposits deposittable(_self, _self.value);
+          deposits deposittable(_self, to.value);
           add_deposit_asset(deposittable, to, new_deposit_asset);
         }
     }
 
-    [[eosio::action]] void withdraw(name account, std::optional<extended_asset> amount)
+    [[eosio::action]] void withdraw(name account, extended_asset amount)
     {
         require_auth(account);
 
-        deposits deposittable(_self, _self.value);
-        auto deposit_itr = deposittable.find(account.value);
+        deposits deposittable(_self, account.value);
 
-        check(deposit_itr != deposittable.end(), "A deposit must exist");
+        check( amount.quantity.symbol.is_valid(), "invalid symbol name" );
+        check( amount.quantity.amount > 0, "must be a positive quantity" );
 
-        auto deposit = *deposit_itr;
+        sub_deposit_asset(deposittable, account, amount);
 
-        if (amount != std::nullopt) {
-            auto wamount = amount.value();
-            check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
-            check( wamount.quantity.amount > 0, "must be a positive quantity" );
-
-            sub_deposit_asset(deposittable, account, wamount);
-
-            eosio::action(permission_level(_self, name("active")),
-                    wamount.contract, name("transfer"),
-                    std::make_tuple(_self, account, wamount.quantity.amount, "withdraw asset action"))
-            .send();
-        } else {
-            for ( auto const& asset: deposit.assetmap ) {
-                eosio::action(permission_level(_self, name("active")),
-                        asset.second.contract, name("transfer"),
-                        std::make_tuple(_self, account, asset.second.quantity.amount, "withdraw asset action"))
-                .send();
-            }
-
-            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-                d.assetmap.clear();
-            });
-        }
+        eosio::action(permission_level(_self, name("active")),
+                amount.contract, name("transfer"),
+                std::make_tuple(_self, account, amount.quantity.amount, "withdraw asset action"))
+        .send();
     }
 
     struct action_vwithdraw {
         name vaccount;
         name to;
-        std::optional<extended_asset> amount;
+        extended_asset amount;
 
         EOSLIB_SERIALIZE( action_vwithdraw, (vaccount)(to)(amount) )
     };
@@ -274,84 +242,66 @@ CONTRACT_START()
     {
         require_vaccount(payload.vaccount);
 
-        vdeposits vdeposittable(_self, _self.value);
-        auto deposit_itr = vdeposittable.find(payload.vaccount.value);
+        vdeposits vdeposittable(_self, payload.vaccount.value);
 
-        check(deposit_itr != vdeposittable.end(), "A deposit must exist");
+        auto wamount = payload.amount;
+        check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
+        check( wamount.quantity.amount > 0, "must be a positive quantity" );
 
-        auto deposit = *deposit_itr;
+        sub_deposit_asset(vdeposittable, payload.vaccount, wamount);
 
-        if (payload.amount != std::nullopt) {
-            auto wamount = payload.amount.value();
-            check( wamount.quantity.symbol.is_valid(), "invalid symbol name" );
-            check( wamount.quantity.amount > 0, "must be a positive quantity" );
-
-            sub_deposit_asset(vdeposittable, payload.vaccount, wamount);
-
-            eosio::action(permission_level(_self, name("active")),
-                    wamount.contract, name("transfer"),
-                    std::make_tuple(_self, payload.to, wamount.quantity.amount, "withdraw asset action"))
-            .send();
-        } else {
-            for ( auto const& asset: deposit.assetmap ) {
-                eosio::action(permission_level(_self, name("active")),
-                        asset.second.contract, name("transfer"),
-                        std::make_tuple(_self, payload.to, asset.second.quantity.amount, "withdraw asset action"))
-                .send();
-            }
-
-            vdeposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
-                d.assetmap.clear();
-            });
-        }
+        eosio::action(permission_level(_self, name("active")),
+                wamount.contract, name("transfer"),
+                std::make_tuple(_self, payload.to, wamount.quantity.amount, "withdraw asset action"))
+        .send();
     }
 
    private:
 
-      template<typename T>
-      void sub_deposit_asset(T& deposittable, name account, const extended_asset& amt)
-      {
-        auto deposit_itr = deposittable.find(account.value);
-        const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
-        const auto& deposit_asset_itr = deposit_itr->assetmap.find(asset_key);
+    template<typename T>
+    void sub_deposit_asset(T& deposittable, name account, const extended_asset& amt) 
+    {
+        auto deposit_itr = deposittable.find(amt.contract.value);
+        auto asset_symcode_raw = amt.quantity.symbol.code().raw();
+        const auto& deposit_asset_itr = deposit_itr->assetmap.find(asset_symcode_raw);
 
-        check(deposit_asset_itr != deposit_itr->assetmap.end(), "required a deposit of the asset");
+        check(deposit_asset_itr != deposit_itr->assetmap.end(), "asset deposit required");
 
         auto& deposit_asset = deposit_asset_itr->second;
-        auto asset_amount = deposit_asset.quantity.amount;
+        auto asset_amount = deposit_asset.amount;
         auto amt_amount = amt.quantity.amount;
 
         check(asset_amount >= amt_amount, "not enough funds for this asset");
 
         if(asset_amount == amt_amount) {
-            deposittable.modify(deposit_itr, _self, [&](auto &d) {
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
                 d.assetmap.erase(deposit_asset_itr);
             });
         } else {
-            deposittable.modify(deposit_itr, _self, [&](auto &d) {
-                d.assetmap[asset_key].quantity.amount -= amt_amount;
+            deposittable.modify(deposit_itr, eosio::same_payer, [&](auto &d) {
+                d.assetmap[asset_symcode_raw].amount -= amt_amount;
             });
         }
     }
 
     template<typename T>
     void add_deposit_asset(T& deposittable, name account, const extended_asset& amt) {
-        auto deposit_itr = deposittable.find(account.value);
-        const auto& asset_key = std::pair<uint64_t, uint64_t>(amt.contract.value, amt.quantity.symbol.code().raw());
+        auto deposit_itr = deposittable.find(amt.contract.value);
+        auto asset_symcode_raw = amt.quantity.symbol.code().raw();
 
         if(deposit_itr == deposittable.end()) {
-            deposittable.emplace(account, [&](auto &d) {
-                d.account = account;
-                d.assetmap[asset_key] = amt;
+            deposittable.emplace(_self, [&](auto &d) {
+                d.contract = amt.contract;
+                d.assetmap[asset_symcode_raw] = amt.quantity;
             });
         } else {
             deposittable.modify(deposit_itr, _self, [&](auto &d) {
-                const auto& deposit_asset_itr = d.assetmap.find(asset_key);
+                const auto& deposit_asset_itr = d.assetmap.find(asset_symcode_raw);
 
                 if(deposit_asset_itr == d.assetmap.end()) {
-                    d.assetmap[asset_key] = amt;
+                    d.assetmap[asset_symcode_raw] = amt.quantity;
                 } else {
-                    d.assetmap[asset_key] += amt;
+                    d.assetmap[asset_symcode_raw] += amt.quantity;
                 }
             });
         }

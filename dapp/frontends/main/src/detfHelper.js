@@ -159,18 +159,24 @@ export default function(eos, dappClient) {
             expireSeconds: 30,
         });
     },
-
     getDetfStat: async function(code, symbolCode) {
-        const service = await dappClient.service('ipfs', code);
-        const response = await service.get_vram_row(code, code, 'stat', symbolCode );
-        console.log(response);
-        return response;
+        const data = await eos.rpc.get_table_rows({
+            json: true,
+            code,
+            scope: symbolCode,
+            table: 'stat',
+            limit: 1
+        });
+        return data.rows[0];
     },
-    getDeposit: async function(code, account) {
-        const service = await dappClient.service('ipfs', code);
-        const response = await service.get_vram_row(code, code, 'deposits', account );
-        console.log(response);
-        return response;
+    getDeposits: async function(code, account) {
+        const data = await eos.rpc.get_table_rows({
+            json: true,
+            code,
+            scope: code,
+            table: 'deposits'
+        });
+        return data.rows;
     },
     getBalance: async function(code, account) {
         const service = await dappClient.service('ipfs', code);

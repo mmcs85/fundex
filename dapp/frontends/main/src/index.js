@@ -102,11 +102,10 @@ async function init () {
   const detfHelper = new DetfHelper(eos, dspClient);
   const detfdexHelper = new DetfdexHelper(eos, dspClient);
 
-  await seedContractTokens(eosHelper);
-  await seedAccounts(eosHelper);
-  await seedDetfs(eosHelper, detfHelper);
-
-  eosHelper.getTableRows('liquidwingse', 'liquidwingse', 'stat')
+//   await seedContractTokens(eosHelper);
+//   await seedAccounts(eosHelper);
+//   await seedDetfs(eosHelper, detfHelper);
+  await exchangeDetfs(eosHelper, detfdexHelper);
 }
 
 async function seedContractTokens(eosHelper) {
@@ -169,18 +168,35 @@ async function seedDetfs(eosHelper, detfHelper) {
         }], '1000000000.0000 SCETF');
     } catch(e){};
 
-    await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingse', '20.0000 EOS', 'deposit asset', {actor: 'liquidmarios', permission: 'active'});
-    await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingse', '10.0000 DAPP', 'deposit asset', {actor: 'liquidmarios', permission: 'active'});
-    await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingse', '1.0000 ETH', 'deposit asset', {actor: 'liquidmarios', permission: 'active'});
-    await detfHelper.issueDetf('liquidwingse', 'liquidmarios', '0.0001 RETF', 'get some shares');
+    await detfHelper.issueDetfBulk('liquidwingse', 'liquidmarios', '0.0010 RETF', 'RETF', 'get some shares');
+    await detfHelper.issueDetfBulk('liquidwingse', 'liquidzachal', '0.0010 SVETF', 'SVETF', 'get some shares');
+    await detfHelper.issueDetfBulk('liquidwingse', 'liquidpeters', '0.0010 SCETF', 'SCETF', 'get some shares');
+}
 
-    // await eosHelper.transfer('eosio.token', 'liquidzachal', 'liquidwingse', '1.0000 BTC', 'deposit asset', {actor: 'liquidzachal', permission: 'active'});
-    // await eosHelper.transfer('eosio.token', 'liquidzachal', 'liquidwingse', '1.0000 GOLD', 'deposit asset', {actor: 'liquidzachal', permission: 'active'});
-    // await detfHelper.issueDetf('liquidwingse', 'liquidzachal', '0.0001 SVETF', 'get some shares');
+async function exchangeDetfs(eosHelper, detfdexHelper) {
+    await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidzachal', '0.0003 RETF', 'friend donation', {
+        actor: 'liquidmarios',
+        permission: 'active',
+    });
+    // try {
+    //     await eosHelper.transfer('liquidwingse', 'liquidmarios', 'liquidwingsx', '0.0003 RETF', 'deposit asset', {
+    //         actor: 'liquidmarios',
+    //         permission: 'active',
+    //     });
+    //     await eosHelper.transfer('eosio.token', 'liquidmarios', 'liquidwingsx', '1000.0000 USDT', 'deposit asset', {
+    //         actor: 'liquidmarios',
+    //         permission: 'active',
+    //     });
+    //     await detfdexHelper.createMarket('liquidwingsx', 'liquidmarios', 1, 'Resources ETF/USDT', {
+    //         contract: 'liquidwingse',
+    //         quantity: '0.0003 RETF'
+    //     }, {
+    //         contract: 'eosio.token',
+    //         quantity: '1000.0000 USDT'
+    //     })
+    // } catch(e){};
 
-    // await eosHelper.transfer('eosio.token', 'liquidpeters', 'liquidwingse', '0.5000 USDT', 'deposit asset', {actor: 'liquidpeters', permission: 'active'});
-    // await eosHelper.transfer('eosio.token', 'liquidpeters', 'liquidwingse', '0.5000 USDC', 'deposit asset', {actor: 'liquidpeters', permission: 'active'});
-    // await detfHelper.issueDetf('liquidwingse', 'liquidpeters', '0.0001 SVETF', 'get some shares');
+    
 }
 
 init();
