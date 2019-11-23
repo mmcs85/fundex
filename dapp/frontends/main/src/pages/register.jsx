@@ -50,10 +50,10 @@ class Register extends Component {
     }
 
     async createAccount() {
-        // generated password = this.state.password
+        // // generated password = this.state.password
         // const privKey = PrivateKey.fromSeed(this.state.password).toString()
-        // this.detfdexHelper.regaccount('liquidwingse', privKey, 'testing126');
-        //show account
+        // await this.detfdexHelper.regaccount('liquidwingse', privKey, 'testing126');
+        // //show account
     }
 
 

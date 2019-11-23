@@ -178,7 +178,7 @@ export default function(eos, dappClient) {
         });
         return data.rows;
     },
-    getBalance: async function(code, account, symbolCode) {
+    getVRamBalance: async function(code, account, symbolCode) {
         const service = await dappClient.service('ipfs', code);
         const response = await service.get_vram_row(code, account, 'accounts', symbolCode );
         console.log(response);

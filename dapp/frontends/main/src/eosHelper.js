@@ -126,7 +126,16 @@ export default function(eos) {
             limit
         })
         return data.rows
-    }
+    },
+    getBalances: async function(code, account) {
+        const data = await eos.rpc.get_table_rows({
+            json: true,
+            code,
+            scope: account,
+            table: 'deposits'
+        });
+        return data.rows;
+    },
   };
 }
 

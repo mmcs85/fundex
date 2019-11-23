@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import Nav from './nav'
+import EosHelper from './../../eosHelper'
+import DetfdexHelper from './../../detfdexHelper'
+import DetfHelper from './../../detfHelper'
 
 import {
     Dropdown,
@@ -30,14 +33,13 @@ import {
 class Convert extends Component {
     constructor(props) {
         super(props)
-        this.state = {
-            funds: [
-                { key: 1, text: 'FUNDX', value: 1 },
-                { key: 2, text: 'EOSFUND', value: 2 },
-                { key: 3, text: 'FUND123', value: 3 },
-            ]
-        };
+        this.eosHelper = new EosHelper(window.eos);
+        this.detfHelper = new DetfHelper(window.eos, window.dspClient);
+        this.detfdexHelper = new DetfdexHelper(window.eos, window.dspClient);
 
+        this.state = {
+            funds: this.getFunds.bind(this)
+        };
 
     }
 
@@ -45,9 +47,35 @@ class Convert extends Component {
     componentDidMount() {
     }
 
+    async getFunds() {
+        const funds = [
+            { key: 1, symbol: 'RETF', text: 'Resources ETF',       value: 1 },
+            { key: 2, symbol: 'SVETF', text: 'Store of Value ETF', value: 2 },
+            { key: 3, symbol: 'SCETF', text: 'Stable coins ETF',   value: 3 },
+        ];
 
-    callConvert() {
-        // @ mario - make call to convert funds... (I will fill in variables)
+        for(let fund of funds) {
+            fund.detail = await this.detfHelper.getDetfStat(window.cfg.detfContract, fund.symbol);
+        }
+        return funds;
+    }
+
+    async callConvert() {
+        const userAccount = 'liquidmarios';
+        const marketId = 1;
+        const quantity = '0.0001 RETF';
+        const transferMemo = '';
+        const isTransfer = true;
+
+        await this.eosHelper.transfer(window.cfg.detfContract, userAccount, window.cfg.detfDexContract, quantity, transferMemo, {
+            actor: userAccount,
+            permission: 'active',
+        });
+
+        await this.detfdexHelper.convert(window.cfg.detfDexContract, userAccount, marketId, {
+            contract: window.cfg.detfContract,
+            quantity
+        }, isTransfer);
     }
 
     renderConvert() {
