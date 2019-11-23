@@ -36,24 +36,26 @@ class Nav extends Component {
         return (
 
 
-                    <Menu pointing secondary>
-          <Link to='/dash'><Menu.Item
-            name='My Funds'
-            active={false}
-          /></Link>
-          <Link to='/dash/convert'><Menu.Item
-            name='Convert'
-            active={'activeItem' === 'messages'}
-            onClick={this.handleItemClick}
-          /></Link>
-          <Menu.Menu position='right'>
-            <Link to='#'><Menu.Item
-              name='logout'
-              active={'activeItem' === 'logout'}
-              onClick={this.handleItemClick}
-            /></Link>
-          </Menu.Menu>
-        </Menu>
+            <Menu pointing secondary>
+                <Link to='/dash'><Menu.Item
+                    name='My Funds'
+                    active={window.location.pathname === '/dash'}
+                /></Link>
+                <Link to='/dash/convert'><Menu.Item
+                    name='Convert'
+                    active={window.location.pathname === '/dash/convert'}
+                /></Link>
+                <Link to='/dash/issue'><Menu.Item
+                    name='Issue'
+                    active={window.location.pathname === '/dash/issue'}
+                /></Link>
+                <Menu.Menu position='right'>
+                    <Link to='#'><Menu.Item
+                        name='logout'
+                        active={'activeItem' === 'logout'}
+                    /></Link>
+                </Menu.Menu>
+            </Menu>
 
 
 

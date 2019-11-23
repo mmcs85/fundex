@@ -8,6 +8,8 @@ import created from './created'
 import login from './login'
 import dash from './dashboard/dashboard'
 import convert from './dashboard/convert'
+import issue from './dashboard/issue'
+import success from './dashboard/success'
 
 import {
     Button,
@@ -48,7 +50,7 @@ class Index extends Component {
         return (
 
             <div>
-                <img src="/images/logo.png" style={{maxWidth: '200px', marginLeft:'1em'}} />
+                <img src="/images/logo.png" style={{maxWidth: '250px', marginLeft:'1em'}} />
 
                 <Grid textAlign='center' style={{ height: '90vh' }} verticalAlign='middle'>
                     <Grid.Column style={{ maxWidth: 500 }}>
@@ -63,6 +65,8 @@ class Index extends Component {
                                     <Route exact path='/login' component={login}/>
                                     <Route exact path='/dash' component={dash}/>
                                     <Route exact path='/dash/convert' component={convert}/>
+                                    <Route exact path='/dash/issue' component={issue}/>
+                                    <Route exact path='/dash/success' component={success}/>
                                 </BrowserRouter>
                             </Segment>
                             <br />
