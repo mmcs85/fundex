@@ -29,12 +29,16 @@ import {
 class Dashboard extends Component {
     constructor(props) {
         super(props)
+        this.getFunds = this.getFunds.bind(this)
     }
 
 
     componentDidMount() {
     }
 
+    getFunds() {
+        // @mario, data for funds user has.
+    }
 
     renderFunds() {
         return (

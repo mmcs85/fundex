@@ -1,5 +1,6 @@
 import { PrivateKey } from 'eosjs-ecc'
 import React, { Component } from 'react';
+import  { Link } from 'react-router-dom'
 import DetfdexHelper from './../detfdexHelper'
 
 import {
@@ -64,11 +65,13 @@ class Register extends Component {
                 <h2>Oh Yea! New Account.</h2>
                 We've created a new fund management account for you with the following password, please store it somewhere safe.
                  <br /><br />
-                <Input size='massive' type="text" placeholder='Generating password' value={this.state.pass} disabled={true} tabindex="-1" />
+                <Input size='massive' type="text" placeholder='Generating password' value={this.state.password} disabled={true} tabindex="-1" />
                 <br /><br />
                 <Checkbox onClick={this.agree} label={{ children: 'I have saved my password in a safe place.' }} />
                 <br /><br />
-                <Button size='large' onClick={this.createAccount} disabled={!this.state.agreed} content="Let's Go" primary />
+                <Link to='/created'>
+                    <Button size='large' onClick={this.createAccount} disabled={!this.state.agreed} content="Let's Go" primary />
+                </Link>
 
             
             </div>
