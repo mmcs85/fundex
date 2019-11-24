@@ -55,12 +55,16 @@ class Issue extends Component {
         };
 
         this.callCreateFund = this.callCreateFund.bind(this)
+        this.onChange = this.onChange.bind(this)
     }
 
 
     componentDidMount() {
         this.setState({ ...this.state });
     }
+
+    onChange = e => this.setState({ [e.target.name]: e.target.value })
+
 
     async callCreateFund(fromSymbol) {
         const newMarketId = Math.floor(Math.random*1000000)
@@ -115,35 +119,35 @@ class Issue extends Component {
                 <br />
                 Use this form to create a new backed Fund.
                 <br /><br />
-                <Input label='Ticker' placeholder='Symbol...' value={this.state.symbol} />
+                <Input name='symbol' onChange={this.onChange} label='Ticker' placeholder='Symbol...' value={this.state.symbol} />
                 <br /><br />
-                <Input label='Max Supply' placeholder='100000.0000' value={this.state.maxSupply} />
+                <Input name='maxSupply' onChange={this.onChange} label='Max Supply' placeholder='100000.0000' value={this.state.maxSupply} />
                 <br /><br />
                 Optionally create a Market to trade against the fund
                 <hr />
                 <Form.Group widths='equal'>
-                    <Form.Input fluid label='Name' placeholder='Name' value={this.state.marketName} />
-                    <Form.Input fluid label='Base Amount' placeholder='500.0000' value={this.state.BaseAmount} />
-                    <Form.Input fluid label='Fee' placeholder='5' value={this.state.fee} />
+                    <Form.Input fluid name='marketName' onChange={this.onChange} label='Name' placeholder='Name' value={this.state.marketName} />
+                    <Form.Input fluid name='BaseAmount' onChange={this.onChange} label='Base Amount' placeholder='500.0000' value={this.state.BaseAmount} />
+                    <Form.Input fluid name='fee' onChange={this.onChange} label='Fee' placeholder='5' value={this.state.fee} />
                 </Form.Group>
                 <Form.Group widths='equal'>
-                    <Form.Input fluid label='Quote Contract' placeholder='xdummytokenx' value={this.state.QuoteContract} />
-                    <Form.Input fluid label='Quote Amount' placeholder='500.0000 USDT' value={this.state.QuoteAmount} />                    
+                    <Form.Input fluid name='QuoteContract' onChange={this.onChange} label='Quote Contract' placeholder='xdummytokenx' value={this.state.QuoteContract} />
+                    <Form.Input fluid name='QuoteAmount' onChange={this.onChange} label='Quote Amount' placeholder='500.0000 USDT' value={this.state.QuoteAmount} />                    
                 </Form.Group>
 
                 Enter the contract and amounts that will be used for this fund. You'll need to deposit these amounts before creation.
                 <hr />
                 <Form.Group widths='equal'>
-                    <Form.Input fluid label='Contract' placeholder='xdummytokenx' value={this.state.Asset1Contract} />
-                    <Form.Input fluid label='Amount' placeholder='1000.0000 EOS'  value={this.state.Asset1Amount} />
+                    <Form.Input fluid name='Asset1Contract' onChange={this.onChange} label='Contract' placeholder='xdummytokenx' value={this.state.Asset1Contract} />
+                    <Form.Input fluid name='Asset1Amount' onChange={this.onChange} label='Amount' placeholder='1000.0000 EOS'  value={this.state.Asset1Amount} />
                 </Form.Group>
                 <Form.Group widths='equal'>
-                    <Form.Input fluid placeholder='xdummytokenx' value={this.state.Asset2Contract} />
-                    <Form.Input fluid placeholder='5.0000 BTC'   value={this.state.Asset2Amount} />
+                    <Form.Input fluid name='Asset2Contract' onChange={this.onChange} placeholder='xdummytokenx' value={this.state.Asset2Contract} />
+                    <Form.Input fluid name='Asset2Amount' onChange={this.onChange} placeholder='5.0000 BTC'   value={this.state.Asset2Amount} />
                 </Form.Group>
                 <Form.Group widths='equal'>
-                    <Form.Input fluid placeholder='' value={this.state.Asset3Contract} />
-                    <Form.Input fluid placeholder='' value={this.state.Asset3Amount} />
+                    <Form.Input fluid name='Asset3Contract' onChange={this.onChange} placeholder='' value={this.state.Asset3Contract} />
+                    <Form.Input fluid name='Asset3Amount' onChange={this.onChange} placeholder='' value={this.state.Asset3Amount} />
                 </Form.Group>
 
                 <Link to='/dash/success'><Button onClick={this.callCreateFund} size='large' color='olive' content="Create new fund." /></Link>
