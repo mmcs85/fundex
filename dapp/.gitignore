@@ -246,7 +246,6 @@ templates/emptycontract-eos-cpp/package.json
 frontends/.placeholder
 
 frontends/main/public/eos-logo.png
-frontends/main/public/index.html
 frontends/main/public/liquideos.png
 frontends/main/public/loader.svg
 frontends/main/public/scatter.min.js
