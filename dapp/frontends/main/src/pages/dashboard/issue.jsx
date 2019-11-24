@@ -105,7 +105,7 @@ class Issue extends Component {
             quantity: unitQuantity
         }, {
             contract: this.state.QuoteContract,
-            quantity: '1000.0000 USDT'
+            quantity: this.state.QuoteAmount
         })
     }
 
