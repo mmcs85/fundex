@@ -132,7 +132,7 @@ export default function(eos) {
             json: true,
             code,
             scope: account,
-            table: 'deposits'
+            table: 'accounts'
         });
         return data.rows;
     },

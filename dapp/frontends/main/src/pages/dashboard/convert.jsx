@@ -47,9 +47,7 @@ class Convert extends Component {
 
     }
 
-
     async componentDidMount() {
-
         let funds = await this.getFunds()
         this.setState({ ...this.state, funds })
     }
@@ -68,18 +66,18 @@ class Convert extends Component {
     }
 
     async callConvert() {
-        const userAccount = 'liquidmarios';
         const marketId = this.state.fundSelected;
-        const quantity = '0.0001 RETF';
+        const fundSelected = this.state.funds[this.state.fundSelected - 1];
+        const quantity = `${this.state.tradeAmt} ${fundSelected.symbol}`;
         const transferMemo = '';
         const isTransfer = true;
 
-        await this.eosHelper.transfer(window.cfg.detfContract, userAccount, window.cfg.detfDexContract, quantity, transferMemo, {
-            actor: userAccount,
+        await this.eosHelper.transfer(window.cfg.detfContract, window.cfg.loggedInAccount, window.cfg.detfDexContract, quantity, transferMemo, {
+            actor: window.cfg.loggedInAccount,
             permission: 'active',
         });
 
-        await this.detfdexHelper.convert(window.cfg.detfDexContract, userAccount, marketId, {
+        await this.detfdexHelper.convert(window.cfg.detfDexContract, window.cfg.loggedInAccount, marketId, {
             contract: window.cfg.detfContract,
             quantity
         }, isTransfer);
@@ -91,7 +89,6 @@ class Convert extends Component {
     }
 
     renderConvert() {
-
         console.log("funds")
         console.log(this.state.funds)
         let fundSelected = this.state.funds[this.state.fundSelected - 1]

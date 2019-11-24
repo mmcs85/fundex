@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Nav from './nav'
 import EosHelper from './../../eosHelper'
 import DetfHelper from './../../detfHelper'
+import DetfdexHelper from './../../detfdexHelper'
 
 import {
     Button,
@@ -33,7 +34,9 @@ class Dashboard extends Component {
         super(props)
         this.eosHelper = new EosHelper(window.eos);
         this.detfHelper = new DetfHelper(window.eos, window.dspClient);
-        //this.getFunds = this.getFunds.bind(this)
+        this.detfdexHelper = new DetfdexHelper(window.eos, window.dspClient);
+        this.getFunds = this.getFunds.bind(this)
+        this.getMarkets = this.getMarkets.bind(this)
 
         this.state = {
             funds: []
@@ -42,21 +45,30 @@ class Dashboard extends Component {
 
 
     async componentDidMount() {
-
         let funds = await this.getFunds()
-        this.setState({ ...this.state, funds })
+        let markets = await this.getMarkets()
+        this.setState({ ...this.state, funds, markets })
     }
 
-
     async getFunds() {
-        console.log("????")
         const userAccount = 'liquidmarios';
 
-        const eosTokenBalances = await this.eosHelper.getBalances('eosio.token', userAccount); 
+        let eosTokenBalances;
+        try {
+            eosTokenBalances = [...await this.eosHelper.getBalances(window.cfg.tokensContract, userAccount)];
+        } catch(e) {
+
+        }
 
         const fundsBalances = [];
         for(let etf of window.cfg.etfs) {
-            eosTokenBalances.push(this.detfHelper.getVRamBalance(window.cfg.detfContract, userAccount, etf));
+            try {
+                const balance = await this.detfHelper.getVRamBalance(window.cfg.detfContract, userAccount, etf);
+                console.log(balance)
+                fundsBalances.push(balance.row);
+            } catch(e) {
+
+            } 
         }
         const balances = [...eosTokenBalances, ...fundsBalances];
 
@@ -65,12 +77,18 @@ class Dashboard extends Component {
         return balances;
     }
 
+    async getMarkets() {
+        const markets = [
+            (await this.detfdexHelper.getMarket(window.cfg.detfDexContract, 1)).row,
+            (await this.detfdexHelper.getMarket(window.cfg.detfDexContract, 2)).row,
+            (await this.detfdexHelper.getMarket(window.cfg.detfDexContract, 3)).row,
+        ];
+        console.log('markets')
+        console.log(markets)
+        return markets;
+    }
+
     renderFunds() {
-
-
-                console.log("funds")
-        console.log(this.state.funds)
-
         return (
                 <Comment.Group size='large'>
 

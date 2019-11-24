@@ -268,7 +268,6 @@ export default function(eos, dappClient) {
     getMarket: async function(code, id) {
         const service = await dappClient.service('ipfs', code);
         const response = await service.get_vram_row(code, code, 'markets', id );
-        console.log(response);
         return response;
     },
 

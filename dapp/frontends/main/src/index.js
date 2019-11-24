@@ -51,6 +51,8 @@ network = ScatterJS.Network.fromJson(network)
 
 window.cfg = {
     network,
+    loggedInAccount: 'liquidmarios',
+    tokensContract: 'xdummytokenx',
     detfContract: 'xxfundexxetf',
     detfDexContract: 'xxfundexxdex',
     accounts: ['liquidmarios', 'liquidzachal', 'liquidpeters', 'liquidlouren'],
@@ -94,7 +96,7 @@ function setupDefaultEos() {
     window.eos = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
 }
 
-async function init () {
+async function init (callback) {
   //await setupScatter();
 
   setupDefaultEos();  
@@ -109,15 +111,17 @@ async function init () {
 
 //  await seedContractTokens(eosHelper);
 //   await seedAccounts(eosHelper);
-//   await seedDetfs(eosHelper, detfHelper);
-//   await seedMarkets(eosHelper, detfHelper, detfdexHelper);
+// await seedDetfs(eosHelper, detfHelper);
+//  await seedMarkets(eosHelper, detfHelper, detfdexHelper);
 //   await checkStates(eosHelper, detfHelper, detfdexHelper);
+
+    callback();
 }
 
 async function seedContractTokens(eosHelper) {
     for(let token of window.cfg.tokens) {
         try {
-            await eosHelper.createToken('xdummytokenx', 'xdummytokenx', `1000000000.0000 ${token}`);
+            await eosHelper.createToken(window.cfg.tokensContract, window.cfg.tokensContract, `1000000000.0000 ${token}`);
         } catch(e){};
     }  
 }
@@ -131,46 +135,46 @@ async function seedAccounts(eosHelper) {
 
     for(let acc of window.cfg.accounts) {
         for(let token of window.cfg.tokens) {
-            await eosHelper.issueToken('xdummytokenx', 'xdummytokenx', acc, `100000.0000 ${token}`, 'give funds');
+            await eosHelper.issueToken(window.cfg.tokensContract, window.cfg.tokensContract, acc, `100000.0000 ${token}`, 'give funds');
         }
     }
 }
 
 async function seedDetfs(eosHelper, detfHelper) {
-    try {
-        await detfHelper.createDetf(window.cfg.detfContract, 'liquidmarios', [{
-            contract: 'xdummytokenx',
-            quantity: '20.0000 EOS'
-        }, {
-            contract: 'xdummytokenx',
-            quantity: '10.0000 DAPP'
-        }, {
-            contract: 'xdummytokenx',
-            quantity: '1.0000 ETH'
-        }], '1000000000.0000 RETF');
-    } catch(e){};
+    // try {
+    //     await detfHelper.createDetf(window.cfg.detfContract, 'liquidmarios', [{
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '20.0000 EOS'
+    //     }, {
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '10.0000 DAPP'
+    //     }, {
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '1.0000 ETH'
+    //     }], '1000000000.0000 RETF');
+    // } catch(e){};
 
-    try {
-        await detfHelper.createDetf(window.cfg.detfContract, 'liquidzachal', [{
-            contract: 'xdummytokenx',
-            quantity: '1.0000 BTC'
-        }, {
-            contract: 'xdummytokenx',
-            quantity: '1.0000 GOLD'
-        }], '1000000000.0000 SVETF');
-    } catch(e){};
+    // try {
+    //     await detfHelper.createDetf(window.cfg.detfContract, 'liquidzachal', [{
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '1.0000 BTC'
+    //     }, {
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '1.0000 GOLD'
+    //     }], '1000000000.0000 SVETF');
+    // } catch(e){};
 
-    try {
-        await detfHelper.createDetf(window.cfg.detfContract, 'liquidpeters', [{
-            contract: 'xdummytokenx',
-            quantity: '0.5000 USDT'
-        }, {
-            contract: 'xdummytokenx',
-            quantity: '0.5000 USDC'
-        }], '1000000000.0000 SCETF');
-    } catch(e){};
+    // try {
+    //     await detfHelper.createDetf(window.cfg.detfContract, 'liquidpeters', [{
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '0.5000 USDT'
+    //     }, {
+    //         contract: window.cfg.tokensContract,
+    //         quantity: '0.5000 USDC'
+    //     }], '1000000000.0000 SCETF');
+    // } catch(e){};
 
-    for(let i = 0; i<20; i++) {
+    for(let i = 0; i<3; i++) {
         await detfHelper.issueDetfBulk(window.cfg.detfContract, 'liquidmarios', '0.0001 RETF', 'RETF', 'get some shares');
         await detfHelper.issueDetfBulk(window.cfg.detfContract, 'liquidzachal', '0.0001 SVETF', 'SVETF', 'get some shares');
         await detfHelper.issueDetfBulk(window.cfg.detfContract, 'liquidpeters', '0.0001 SCETF', 'SCETF', 'get some shares');
@@ -183,7 +187,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
             actor: 'liquidmarios',
             permission: 'active',
         });
-        await eosHelper.transfer('xdummytokenx', 'liquidmarios', window.cfg.detfDexContract, '1000.0000 USDT', '', {
+        await eosHelper.transfer(window.cfg.tokensContract, 'liquidmarios', window.cfg.detfDexContract, '1000.0000 USDT', '', {
             actor: 'liquidmarios',
             permission: 'active',
         });
@@ -191,7 +195,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
             contract: window.cfg.detfContract,
             quantity: '0.0003 RETF'
         }, {
-            contract: 'xdummytokenx',
+            contract: window.cfg.tokensContract,
             quantity: '1000.0000 USDT'
         })
     } catch(e){};
@@ -201,7 +205,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
             actor: 'liquidzachal',
             permission: 'active',
         });
-        await eosHelper.transfer('xdummytokenx', 'liquidzachal', window.cfg.detfDexContract, '1000.0000 USDT', '', {
+        await eosHelper.transfer(window.cfg.tokensContract, 'liquidzachal', window.cfg.detfDexContract, '1000.0000 USDT', '', {
             actor: 'liquidzachal',
             permission: 'active',
         });
@@ -209,7 +213,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
             contract: window.cfg.detfContract,
             quantity: '0.0003 SVETF'
         }, {
-            contract: 'xdummytokenx',
+            contract: window.cfg.tokensContract,
             quantity: '1000.0000 USDT'
         })
     } catch(e){};
@@ -219,7 +223,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
             actor: 'liquidpeters',
             permission: 'active',
         });
-        await eosHelper.transfer('xdummytokenx', 'liquidpeters', window.cfg.detfDexContract, '1000.0000 EOS', '', {
+        await eosHelper.transfer(window.cfg.tokensContract, 'liquidpeters', window.cfg.detfDexContract, '1000.0000 EOS', '', {
             actor: 'liquidpeters',
             permission: 'active',
         });
@@ -227,7 +231,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
             contract: window.cfg.detfContract,
             quantity: '0.0003 SCETF'
         }, {
-            contract: 'xdummytokenx',
+            contract: window.cfg.tokensContract,
             quantity: '1000.0000 EOS'
         })
     } catch(e){};
@@ -242,7 +246,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
     // }, true);
 
     // await detfdexHelper.withdraw(window.cfg.detfDexContract, 'liquidmarios', {
-    //     contract: 'xdummytokenx',
+    //     contract: window.cfg.tokensContract,
     //     quantity: '0.0001 RETF'
     // })
 
@@ -256,13 +260,14 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
 }
 
 async function checkStates(eosHelper, detfHelper, detfdexHelper) {
-    await detfdexHelper.getMarket(window.cfg.detfDexContract, 1);
-    await detfHelper.getVRamBalance(window.cfg.detfContract, 'liquidmarios', 'RETF');
-    await detfHelper.getDeposits(window.cfg.detfContract, 'liquidmarios')
-    await detfdexHelper.getVaccDeposits(window.cfg.detfDexContract, 'testing111')
+    // await detfdexHelper.getMarket(window.cfg.detfDexContract, 1);
+    // await detfdexHelper.getMarket(window.cfg.detfDexContract, 2);
+    // await detfdexHelper.getMarket(window.cfg.detfDexContract, 3);
 }
 
-init();
+init(function() {
+    ReactDOM.render(<Index />, document.getElementById('root'));
+});
 
 // ScatterJS.scatter.connect('liquidWings').then((connected) => {
 //   if (!connected) {
@@ -272,4 +277,4 @@ init();
   
 // })
 
-ReactDOM.render(<Index />, document.getElementById('root'));
+
