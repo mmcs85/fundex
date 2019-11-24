@@ -30,7 +30,7 @@ class Login extends Component {
     constructor(props) {
         super(props)
         this.state = {
-
+            showPassForm: false
         };
 
     }
@@ -39,10 +39,27 @@ class Login extends Component {
     componentDidMount() {
     }
 
-  
+    renderLoginForm() {
+        return (
+            <Form>
+                <Form.Field>
+                    <label>Username</label>
+                    <input placeholder='myuseracct' />
+                </Form.Field>
+                <Form.Field>
+                    <label>Password</label>
+                    <input type="password" placeholder='**********' />
+                </Form.Field>
+                <Link to='/dash'><Button type='submit'>Submit</Button></Link>
+            </Form>
+        )
+    }
+
 
 
     render() {
+
+        if(this.state.showPassForm) return this.renderLoginForm()
 
         return (
 
@@ -56,7 +73,7 @@ class Login extends Component {
                             User Login
           </Header>
 
-                        <Button>Enter Password</Button>
+                        <Button onClick={this.setState({...this.state,showPassForm:true})}>Enter Password</Button>
 
                     </Grid.Column>
 
