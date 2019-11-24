@@ -33,15 +33,23 @@ class Dashboard extends Component {
         super(props)
         this.eosHelper = new EosHelper(window.eos);
         this.detfHelper = new DetfHelper(window.eos, window.dspClient);
-        
-        this.getFunds = this.getFunds.bind(this)
+        //this.getFunds = this.getFunds.bind(this)
+
+        this.state = {
+            funds: []
+        }
     }
 
 
-    componentDidMount() {
+    async componentDidMount() {
+
+        let funds = await this.getFunds()
+        this.setState({ ...this.state, funds })
     }
+
 
     async getFunds() {
+        console.log("????")
         const userAccount = 'liquidmarios';
 
         const eosTokenBalances = await this.eosHelper.getBalances('eosio.token', userAccount); 
@@ -51,10 +59,18 @@ class Dashboard extends Component {
             eosTokenBalances.push(this.detfHelper.getVRamBalance(window.cfg.detfContract, userAccount, etf));
         }
         const balances = [...eosTokenBalances, ...fundsBalances];
+
+        console.log("balances")
+        console.log(balances)
         return balances;
     }
 
     renderFunds() {
+
+
+                console.log("funds")
+        console.log(this.state.funds)
+
         return (
                 <Comment.Group size='large'>
 
