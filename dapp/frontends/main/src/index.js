@@ -41,14 +41,14 @@ if (local) {
 const defaultPrivateKey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3";
 const defaultPubKey = "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV";
 
-const defaultEosiotokenPrivateKey = "5JbBUdKSA2VjAkR56kaPAKq7GeW2Pnm72om5y88oYWP5wSqi6Rq"
+const defaultEosiotokenPrivateKey = "5KbQtFgrtZxiTbfhLAUuZXowunHNMMKsdXvHW17aAEFr1J443uN"
 
 network = ScatterJS.Network.fromJson(network)
 
 window.cfg = {
     network,
-    detfContract: window.cfg.detfContract,
-    detfDexContract: window.cfg.detfDexContract,
+    detfContract: 'liquidwingse',
+    detfDexContract: 'liquidwingsx',
     accounts: ['liquidmarios', 'liquidzachal', 'liquidpeters', 'liquidlouren'],
     tokens: ['EOS', 'DAPP', 'ETH', 'BTC', 'GOLD', 'USDT', 'USDC'],
     etfs: ['RETF', 'SVETF', 'SCETF']
@@ -98,11 +98,11 @@ async function init () {
   const detfHelper = new DetfHelper(eos, dspClient);
   const detfdexHelper = new DetfdexHelper(eos, dspClient);
 
-  await seedContractTokens(eosHelper);
-  await seedAccounts(eosHelper);
-  await seedDetfs(eosHelper, detfHelper);
-  await seedMarkets(eosHelper, detfHelper, detfdexHelper);
-  await checkStates(eosHelper, detfHelper, detfdexHelper);
+//   await seedContractTokens(eosHelper);
+//   await seedAccounts(eosHelper);
+//   await seedDetfs(eosHelper, detfHelper);
+//   await seedMarkets(eosHelper, detfHelper, detfdexHelper);
+//   await checkStates(eosHelper, detfHelper, detfdexHelper);
 }
 
 async function seedContractTokens(eosHelper) {
@@ -248,7 +248,7 @@ async function seedMarkets(eosHelper, detfHelper, detfdexHelper) {
 
 async function checkStates(eosHelper, detfHelper, detfdexHelper) {
     await detfdexHelper.getMarket(window.cfg.detfDexContract, 1);
-    await detfHelper.getBalance(window.cfg.detfContract, 'liquidmarios', 'RETF');
+    await detfHelper.getVRamBalance(window.cfg.detfContract, 'liquidmarios', 'RETF');
     await detfHelper.getDeposits(window.cfg.detfContract, 'liquidmarios')
     await detfdexHelper.getVaccDeposits(window.cfg.detfDexContract, 'testing111')
 }

@@ -19,6 +19,11 @@
             "date": 1574467206001,
             "name": "logs/pprovider1-demux-2019-11-23.log",
             "hash": "1911707a9451fab79227f501f28fa65a"
+        },
+        {
+            "date": 1574553612001,
+            "name": "logs/pprovider1-demux-2019-11-24.log",
+            "hash": "44edd5ad0b980d28d2126bea7da874b1"
         }
     ]
 }
