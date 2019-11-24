@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Link } from "react-router-dom";
+import { HashRouter, Route, Link } from "react-router-dom";
 
 // pages
 import home from './home'
@@ -60,7 +60,7 @@ class Index extends Component {
                         <Form size='large'>
                             <Segment padded stacked style={{textAlign:'left'}}>
 
-                                <BrowserRouter>
+                                <HashRouter>
                                     <Route exact path='/' component={home}/>
                                     <Route exact path='/go' component={register}/>
                                     <Route exact path='/created' component={created}/>
@@ -69,12 +69,12 @@ class Index extends Component {
                                     <Route exact path='/dash/convert' component={convert}/>
                                     <Route exact path='/dash/issue' component={issue}/>
                                     <Route exact path='/dash/success' component={success}/>
-                                </BrowserRouter>
+                                </HashRouter>
                             </Segment>
                             <br />
 
                             <div className="foot">
-                                <a href="/">Home</a> | <a href="/go">Register</a> | <a href="/login">Login</a>
+                                <a href="#/">Home</a> | <a href="#/go">Register</a> | <a href="#/login">Login</a>
                             </div>
                             
                         </Form>
