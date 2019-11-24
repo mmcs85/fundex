@@ -74,14 +74,14 @@ export default function(eos) {
             expireSeconds: 30,
         });
     },
-    createToken: async function(issuer, maximum_supply) {
+    createToken: async function(contract, issuer, maximum_supply) {
         const result = await eos.transact({
             actions: [{
-                account: 'eosio.token',
+                account: contract,
                 name: 'create',
                 authorization: [
                 {
-                    actor: 'eosio.token',
+                    actor: contract,
                     permission: 'active'
                 }],
                 data: {
@@ -94,10 +94,10 @@ export default function(eos) {
             expireSeconds: 30,
         });
     },
-    issueToken: async function(issuer, to, quantity, memo ) {
+    issueToken: async function(contract, issuer, to, quantity, memo ) {
         const result = await eos.transact({
             actions: [{
-                account: 'eosio.token',
+                account: contract,
                 name: 'issue',
                 authorization: [{                    
                     actor: issuer,
