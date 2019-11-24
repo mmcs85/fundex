@@ -37,7 +37,7 @@ class Nav extends Component {
             <div>
                 <b>Account: {window.cfg.loggedInAccount}</b><br />
 
-                <Menu pointing secondary>
+                <Menu pointing secondary style={{marginBottom:'1em'}}>
                     <Link to='/dash'><Menu.Item
                         name='My Funds'
                         active={window.location.pathname === '/dash'}
