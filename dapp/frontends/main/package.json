@@ -1,5 +1,5 @@
 {
-   "name": "zeus-seed",
+   "name": "zeus-ide",
    "version": "1.0.0",
    "description": "",
    "main": "index.js",
@@ -7,9 +7,12 @@
       "start": "react-scripts start",
       "build": "react-scripts build && sed 's/\\\"\\/static/\\\"\\.\\/static/g' -i build/index.html",
       "test": "react-scripts test --env=jsdom",
-      "eject": "react-scripts eject"
+      "eject": "react-scripts eject",
+      "predeploy": "npm run build",
+      "deploy": "gh-pages -d build"
    },
    "author": "",
+   "homepage": "./",
    "license": "ISC",
    "dependencies": {
       "@liquidapps/dapp-client": "^2.0.3107",
@@ -24,7 +27,9 @@
       "eos-transit-tokenpocket-provider": "^4.0.1",
       "eosjs": "^20.0.0",
       "eosjs-ecc": "^4.0.7",
+      "gh-pages": "^2.1.1",
       "js-sha256": "^0.9.0",
+      "now": "^16.6.0",
       "react": "^16.12.0",
       "react-dom": "^16.12.0",
       "react-grid-layout": "^0.16.6",

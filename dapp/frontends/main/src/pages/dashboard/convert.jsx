@@ -38,7 +38,7 @@ class Convert extends Component {
         this.detfdexHelper = new DetfdexHelper(window.eos, window.dspClient);
 
         this.state = {
-            funds: this.getFunds.bind(this)
+            funds: await this.getFunds()
         };
 
     }
@@ -55,7 +55,7 @@ class Convert extends Component {
         ];
 
         for(let fund of funds) {
-            fund.detail = await this.detfHelper.getDetfStat(window.cfg.detfContract, fund.symbol);
+            //fund.detail = await this.detfHelper.getDetfStat(window.cfg.detfContract, fund.symbol);
         }
         return funds;
     }
@@ -79,6 +79,9 @@ class Convert extends Component {
     }
 
     renderConvert() {
+
+        console.log("funds")
+        console.log(this.state.funds)
         return (
             <div>
 

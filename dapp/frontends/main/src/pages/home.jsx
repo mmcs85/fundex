@@ -40,13 +40,26 @@ class Home extends Component {
 
         return (
 
-            <div>
-                            <h1>Funds you Control</h1>
-                With liquidwings, you can generate funds based on any basket of assets. All decentralized. Always Liquid.
+            <div style={{
+    alignAtems: 'center',
+    justifyContent: 'center'}}>
+    <center>
+
+                            <h1>Funds YOU Control!</h1>
+                With <b>FundEX</b>, you can issue & trade funds based on a basket of crypto assets. <b>All decentralized. Always Liquid.</b>
                 
-                <br />
+                <br /><br /><br />
                 
-                <img src="/images/funds.png" style={{maxWidth:'80%'}}/>
+                <img src="/images/rocket.gif" style={{maxWidth:'80%', margin:'-4em'}}/>
+
+                <br /><br /><br />
+
+                <Link to='/login'><Button size='large' content="Login" /></Link>
+                <Link to='/go'><Button size='large' primary content="Create Account" /></Link>
+
+                <br /><br />
+
+                </center>
                 </div>
 
 
