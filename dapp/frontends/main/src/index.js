@@ -58,7 +58,7 @@ window.cfg = {
     accounts: ['liquidmarios', 'liquidzachal', 'liquidpeters', 'liquidlouren'],
     tokens: ['EOS', 'DAPP', 'ETH', 'BTC', 'GOLD', 'USDT', 'USDC'],
     etfs: ['RETF', 'SVETF', 'SCETF'],
-
+    marketIds: [1,2,3],
     privateKeys: [ '5J96juvRwfwFuM87kTTMyLojVPsvBWwPE5rfrPE8UnnfB3vtS9T', 
                    '5JpuDKQKRSUCV9oTuMr6zSWGvgZRMgMTQ33CBkpEhRsYTAATDDk',
                    '5JTB8muAHW9cN5bg3N9NvbyVpFj7gmjTyt6TopjyZmRwxr2p7an',
@@ -173,8 +173,8 @@ async function getEtfs(detfHelper) {
 
 async function getMarkets(detfdexHelper) {
     const markets = [];
-    for(let i = 1; i <4; i++) {
-        const etf = window.cfg.etfs[i-1]
+    for(let i of window.cfg.marketIds) {
+        const etf = window.cfg.etfs.find((e) => e.key == i);
         let market = (await detfdexHelper.getMarket(window.cfg.detfDexContract, i)).row;
         market.detail = etf.detail;
         market.key = parseInt(market.id);
@@ -182,7 +182,6 @@ async function getMarkets(detfdexHelper) {
         market.text = market.name;
         market.baseSymbol = market.base.quantity.split(" ")[1];
         market.quoteSymbol = market.quote.quantity.split(" ")[1];
-
         markets.push(market);
     }
     console.log('markets')
