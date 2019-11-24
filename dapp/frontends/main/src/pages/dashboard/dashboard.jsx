@@ -35,58 +35,23 @@ class Dashboard extends Component {
         this.eosHelper = new EosHelper(window.eos);
         this.detfHelper = new DetfHelper(window.eos, window.dspClient);
         this.detfdexHelper = new DetfdexHelper(window.eos, window.dspClient);
-        this.getFunds = this.getFunds.bind(this)
-        this.getMarkets = this.getMarkets.bind(this)
 
         this.state = {
-            funds: []
+            fundBalances: [],
+            etfs: []
         }
     }
 
 
     async componentDidMount() {
-        let funds = await this.getFunds()
-        let markets = await this.getMarkets()
-        this.setState({ ...this.state, funds, markets })
+        let fundBalances = window.cfg.fundBalances
+        let etfs = window.cfg.etfs;
+
+        //TODO filter markets by balances to show Fund balances and market detail
+
+        this.setState({ ...this.state, fundBalances, etfs })
     }
 
-    async getFunds() {
-        const userAccount = 'liquidmarios';
-
-        let eosTokenBalances;
-        try {
-            eosTokenBalances = [...await this.eosHelper.getBalances(window.cfg.tokensContract, userAccount)];
-        } catch(e) {
-
-        }
-
-        const fundsBalances = [];
-        for(let etf of window.cfg.etfs) {
-            try {
-                const balance = await this.detfHelper.getVRamBalance(window.cfg.detfContract, userAccount, etf);
-                console.log(balance)
-                fundsBalances.push(balance.row);
-            } catch(e) {
-
-            } 
-        }
-        const balances = [...eosTokenBalances, ...fundsBalances];
-
-        console.log("balances")
-        console.log(balances)
-        return balances;
-    }
-
-    async getMarkets() {
-        const markets = [
-            (await this.detfdexHelper.getMarket(window.cfg.detfDexContract, 1)).row,
-            (await this.detfdexHelper.getMarket(window.cfg.detfDexContract, 2)).row,
-            (await this.detfdexHelper.getMarket(window.cfg.detfDexContract, 3)).row,
-        ];
-        console.log('markets')
-        console.log(markets)
-        return markets;
-    }
 
     renderFunds() {
         return (
@@ -102,7 +67,7 @@ class Dashboard extends Component {
           </Comment.Metadata>
           <Comment.Text><i>Holdings:</i> Bitcoin, Ethereum, XRP</Comment.Text>
           <Comment.Actions>
-            <a>Buy</a> <a>Sell</a>
+            <a>Buy</a> <a>Sell</a> <a>Issue</a> <a>Redeem</a>
           </Comment.Actions>
         </Comment.Content>
       </Comment>
@@ -115,7 +80,7 @@ class Dashboard extends Component {
           </Comment.Metadata>
           <Comment.Text><i>Holdings:</i> EOS, PEOS, DAPP</Comment.Text>
           <Comment.Actions>
-            <a>Buy</a> <a>Sell</a>
+            <a>Buy</a> <a>Sell</a> <a>Issue</a> <a>Redeem</a>
           </Comment.Actions>
         </Comment.Content>
       </Comment>

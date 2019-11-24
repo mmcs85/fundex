@@ -50,8 +50,10 @@ class Index extends Component {
         return (
 
             <div>
-                <img src="/images/logo.png" style={{maxWidth: '250px', marginLeft:'1em'}} />
-
+                <a href="/">
+                    <img src="/images/logo.png" style={{maxWidth: '250px', marginLeft:'1em'}} />
+                </a>
+                
                 <Grid textAlign='center' style={{ height: '90vh' }} verticalAlign='middle'>
                     <Grid.Column style={{ maxWidth: 500 }}>
 

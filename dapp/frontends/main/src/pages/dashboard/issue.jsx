@@ -43,29 +43,40 @@ class Issue extends Component {
     renderIssue() {
         return (
             <div>
-                Use this form to issue a new Fund backed by a given quantity of assets.
+                <br />
+                Use this form to create a new backed Fund.
                 <br /><br />
                 <Input label='Ticker' placeholder='Symbol...' />
                 <br /><br />
                 <Input label='Max Supply' placeholder='100000' />
                 <br /><br />
+                Optionally create a Market to trade against the fund
                 <hr />
+                <Form.Group widths='equal'>
+                    <Form.Input fluid label='Name' placeholder='Name' />
+                </Form.Group>
+                <Form.Group widths='equal'>
+                    <Form.Input fluid label='Contract' placeholder='xdummytokenx' />
+                    <Form.Input fluid label='Amount' placeholder='500.0000 USDT' />
+                    <Form.Input fluid label='Fee' placeholder='5' />
+                </Form.Group>
+
                 Enter the contract and amounts that will be used for this fund. You'll need to deposit these amounts before creation.
                 <hr />
                 <Form.Group widths='equal'>
-                    <Form.Input fluid label='Contract' placeholder='eosio.token' />
-                    <Form.Input fluid label='Amount' placeholder='10000.0000 EOS' />
+                    <Form.Input fluid label='Contract' placeholder='xdummytokenx' />
+                    <Form.Input fluid label='Amount' placeholder='1000.0000 EOS' />
                 </Form.Group>
                 <Form.Group widths='equal'>
-                    <Form.Input fluid placeholder='btc.token' />
-                    <Form.Input fluid placeholder='5000.0000 EBTC' />
+                    <Form.Input fluid placeholder='xdummytokenx' />
+                    <Form.Input fluid placeholder='5.0000 BTC' />
                 </Form.Group>
                 <Form.Group widths='equal'>
                     <Form.Input fluid placeholder='' />
                     <Form.Input fluid placeholder='' />
                 </Form.Group>
-                <br />
-                <Link to='/dash/success'><Button size='large' color='olive' content="Issue new fund." /></Link>
+
+                <Link to='/dash/success'><Button size='large' color='olive' content="Create new fund." /></Link>
 
             </div>
         )

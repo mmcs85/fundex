@@ -99,6 +99,9 @@ function setupDefaultEos() {
 async function init (callback) {
   //await setupScatter();
 
+  window.cfg.loggedInAccount = window.cfg.accounts[Math.floor(Math.random()*4)];
+  
+
   setupDefaultEos();  
   await setupDspClient();
   //const scatterEos = window.scatterEos;
@@ -109,6 +112,11 @@ async function init (callback) {
   const detfHelper = new DetfHelper(eos, dspClient);
   const detfdexHelper = new DetfdexHelper(eos, dspClient);
 
+  window.cfg.tokenBalances = await getTokenBalances(eosHelper);
+  window.cfg.fundBalances = await getFundBalances(detfHelper);
+  window.cfg.etfs = await getEtfs(detfHelper);
+  window.cfg.markets = await getMarkets(detfdexHelper);
+
 //  await seedContractTokens(eosHelper);
 //   await seedAccounts(eosHelper);
 // await seedDetfs(eosHelper, detfHelper);
@@ -116,6 +124,70 @@ async function init (callback) {
 //   await checkStates(eosHelper, detfHelper, detfdexHelper);
 
     callback();
+}
+
+async function getTokenBalances(eosHelper) {
+    const userAccount = window.cfg.loggedInAccount;
+    let eosTokenBalances;
+    try {
+        eosTokenBalances = [...await eosHelper.getBalances(window.cfg.tokensContract, userAccount)];
+    } catch(e) {
+
+    }
+
+    console.log("eosTokenBalances")
+    console.log(eosTokenBalances)
+    return eosTokenBalances;
+}
+
+async function getFundBalances(detfHelper) {
+    const userAccount = window.cfg.loggedInAccount;
+    const fundsBalances = [];
+    for(let etf of window.cfg.etfs) {
+        try {
+            const balance = await detfHelper.getVRamBalance(window.cfg.detfContract, userAccount, etf);
+            console.log(balance)
+            fundsBalances.push(balance.row);
+        } catch(e) {
+
+        } 
+    }
+
+    console.log("fundsBalances")
+    console.log(fundsBalances)
+    return fundsBalances;
+}
+
+async function getEtfs(detfHelper) {
+    const etfs = [
+        { key: 1, symbol: 'RETF', text: 'Resources ETF', value: 1 },
+        { key: 2, symbol: 'SVETF', text: 'Store of Value ETF', value: 2 },
+        { key: 3, symbol: 'SCETF', text: 'Stable coins ETF', value: 3 },
+    ]
+
+    for (let fund of etfs) {
+        fund.detail = await detfHelper.getDetfStat(window.cfg.detfContract, fund.symbol);
+    }
+    return etfs;
+}
+
+async function getMarkets(detfdexHelper) {
+    const markets = [];
+    for(let i = 1; i <4; i++) {
+        const etf = window.cfg.etfs[i-1]
+        let market = (await detfdexHelper.getMarket(window.cfg.detfDexContract, i)).row;
+        market.detail = etf.detail;
+        market.key = parseInt(market.id);
+        market.value = parseInt(market.id);
+        market.text = market.name;
+        market.baseSymbol = market.base.quantity.split(" ")[1];
+        market.quoteSymbol = market.quote.quantity.split(" ")[1];
+
+        markets.push(market);
+    }
+    console.log('markets')
+    console.log(markets)
+    return markets;
 }
 
 async function seedContractTokens(eosHelper) {

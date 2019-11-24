@@ -34,31 +34,30 @@ class Nav extends Component {
     render() {
 
         return (
+            <div>
+                <b>Account: {window.cfg.loggedInAccount}</b><br />
 
-
-            <Menu pointing secondary>
-                <Link to='/dash'><Menu.Item
-                    name='My Funds'
-                    active={window.location.pathname === '/dash'}
-                /></Link>
-                <Link to='/dash/convert'><Menu.Item
-                    name='Convert'
-                    active={window.location.pathname === '/dash/convert'}
-                /></Link>
-                <Link to='/dash/issue'><Menu.Item
-                    name='Issue'
-                    active={window.location.pathname === '/dash/issue'}
-                /></Link>
-                <Menu.Menu position='right'>
-                    <Link to='#'><Menu.Item
-                        name='logout'
-                        active={'activeItem' === 'logout'}
+                <Menu pointing secondary>
+                    <Link to='/dash'><Menu.Item
+                        name='My Funds'
+                        active={window.location.pathname === '/dash'}
                     /></Link>
-                </Menu.Menu>
-            </Menu>
-
-
-
+                    <Link to='/dash/convert'><Menu.Item
+                        name='Convert'
+                        active={window.location.pathname === '/dash/convert'}
+                    /></Link>
+                    <Link to='/dash/issue'><Menu.Item
+                        name='Create Fund'
+                        active={window.location.pathname === '/dash/issue'}
+                    /></Link>
+                    <Menu.Menu position='right'>
+                        <Link to='/'><Menu.Item
+                            name='logout'
+                            active={window.location.pathname === '/'}
+                        /></Link>
+                    </Menu.Menu>
+                </Menu>
+            </div>
         )
     }
 

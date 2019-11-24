@@ -38,37 +38,40 @@ class Convert extends Component {
         this.detfdexHelper = new DetfdexHelper(window.eos, window.dspClient);
 
         this.state = {
-            funds: [],
-            fundSelected: 1,
+            markets: [],
+            marketSelected: 1,
+            marketBaseBalanceSelected: '',
+            marketQuoteBalanceSelected: '',
             tradeAmt: 100
         };
 
-        this.selectNewFund = this.selectNewFund.bind(this)
-
+        this.selectNewMarket = this.selectNewMarket.bind(this)
+        this.buy = this.buy.bind(this)
+        this.sell = this.sell.bind(this)
+        this.callConvert = this.callConvert.bind(this)
     }
 
     async componentDidMount() {
-        let funds = await this.getFunds()
-        this.setState({ ...this.state, funds })
+        let tokenBalances = window.cfg.tokenBalances;
+        let fundBalances = window.cfg.fundBalances;
+        let markets = window.cfg.markets;
+        this.setState({ ...this.state, markets, tokenBalances, fundBalances });
     }
 
-    async getFunds() {
-        const funds = [
-            { key: 1, symbol: 'RETF', text: 'Resources ETF', value: 1 },
-            { key: 2, symbol: 'SVETF', text: 'Store of Value ETF', value: 2 },
-            { key: 3, symbol: 'SCETF', text: 'Stable coins ETF', value: 3 },
-        ];
-
-        for (let fund of funds) {
-            fund.detail = await this.detfHelper.getDetfStat(window.cfg.detfContract, fund.symbol);
-        }
-        return funds;
+    async buy() {
+        let marketSelected = this.state.markets[this.state.marketSelected - 1];
+        await this.callConvert(marketSelected.quoteSymbol);
     }
 
-    async callConvert() {
-        const marketId = this.state.fundSelected;
-        const fundSelected = this.state.funds[this.state.fundSelected - 1];
-        const quantity = `${this.state.tradeAmt} ${fundSelected.symbol}`;
+    async sell() {
+        let marketSelected = this.state.markets[this.state.marketSelected - 1];
+        await this.callConvert(marketSelected.baseSymbol);
+    }
+
+    async callConvert(fromSymbol) {
+        const marketId = this.state.marketSelected;
+        const marketSelected = this.state.markets[this.state.marketSelected - 1];
+        const quantity = `${this.state.tradeAmt} ${fromSymbol}`;
         const transferMemo = '';
         const isTransfer = true;
 
@@ -83,45 +86,53 @@ class Convert extends Component {
         }, isTransfer);
     }
 
-    selectNewFund(e, d) {
+    selectNewMarket(e, d) {
         console.log(d)
-        this.setState({ ...this.state, fundSelected: d.value })
+        this.setState({ ...this.state, marketSelected: d.value })
     }
 
     renderConvert() {
-        console.log("funds")
-        console.log(this.state.funds)
-        let fundSelected = this.state.funds[this.state.fundSelected - 1]
+        console.log("markets")
+        console.log(this.state.markets)
+        let marketSelected = this.state.markets[this.state.marketSelected - 1]
         let fundBreakdown = 'Loading..'
-        if (fundSelected) {
-            let { basket_units } = fundSelected.detail
+        if (marketSelected) {
+            let { basket_units } = marketSelected.detail
             fundBreakdown = basket_units.map((item) => {
                 return item.quantity + "\n";
             });
+            const baseBalance = this.state.fundBalances.find((b) => b.balance.includes(marketSelected.baseSymbol))
+            const quoteBalance = this.state.tokenBalances.find((b) => b.balance.includes(marketSelected.quoteSymbol))
+
+            this.state.marketBaseBalanceSelected = baseBalance ? baseBalance.balance : ''
+            this.state.marketQuoteBalanceSelected = quoteBalance ? quoteBalance.balance : ''
         }
 
         return (
             <div>
 
-                <b>Choose a fund</b><br />
+                <b>Choose a ETF market</b><br />
                 <Menu compact>
-                    <Dropdown closeOnChange={true} value={this.state.fundSelected} onChange={this.selectNewFund} label='Select a fund' size='large' options={this.state.funds} simple item />
+                    <Dropdown closeOnChange={true} value={this.state.marketSelected} onChange={this.selectNewMarket} label='Select a ETF market' size='large' options={this.state.markets} simple item />
                 </Menu>
 
                 <Table basic='very'>
-
                     <Table.Body>
                         <Table.Row>
-                            <Table.Cell>Your Balance</Table.Cell>
-                            <Table.Cell>{fundSelected ? fundSelected.detail.supply : 'Loading..'}</Table.Cell>
+                            <Table.Cell>Base Balance</Table.Cell>
+                            <Table.Cell>{marketSelected ? this.state.marketBaseBalanceSelected : 'Loading..'}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Quote Balance</Table.Cell>
+                            <Table.Cell>{marketSelected ? this.state.marketQuoteBalanceSelected : 'Loading..'}</Table.Cell>
                         </Table.Row>
                         <Table.Row>
                             <Table.Cell>Total Supply</Table.Cell>
-                            <Table.Cell>{fundSelected ? fundSelected.detail.max_supply : 'Loading..'}</Table.Cell>
+                            <Table.Cell>{marketSelected ? marketSelected.detail.max_supply : 'Loading..'}</Table.Cell>
                         </Table.Row>
                         <Table.Row>
                             <Table.Cell>Holdings</Table.Cell>
-                            <Table.Cell>{fundSelected ? fundBreakdown : 'Loading..'}</Table.Cell>
+                            <Table.Cell>{marketSelected ? fundBreakdown : 'Loading..'}</Table.Cell>
                         </Table.Row>
                     </Table.Body>
                 </Table>
@@ -131,7 +142,8 @@ class Convert extends Component {
                     control='input' size='large' type='number' min={0.0001} max={5000} />
 
                 <br />
-                <Button disabled={Boolean(this.state.tradeAmt <= 0)} size='large' color='olive' content="Convert" />
+                <Button onClick={this.buy} disabled={Boolean(this.state.tradeAmt <= 0)} size='large' color='olive' content="Buy" />
+                <Button onClick={this.sell} disabled={Boolean(this.state.tradeAmt <= 0)} size='large' color='olive' content="Sell" />
 
             </div>
         )
